@@ -25,7 +25,7 @@ QUEUE_SIZE = 10
 BALL_RADIUS = 0.096 # m (actual ball radius measured by meter rule)
 
 # Camera Parameters
-HORIZONTAL_FOV = 70 # (degrees) for D435, 70 is measured, diff from spec: https://www.intel.com/content/www/us/en/support/articles/000030385/emerging-technologies/intel-realsense-technology.html
+HORIZONTAL_FOV = 68 # (degrees) for D435, 68 is measured, diff from spec: https://www.intel.com/content/www/us/en/support/articles/000030385/emerging-technologies/intel-realsense-technology.html
 VERTICAL_FOV = 57
 HORIZONTAL_RESOLUTION = 1280 # px
 VERTICAL_RESOLUTION = 720 # px
