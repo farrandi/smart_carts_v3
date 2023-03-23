@@ -140,7 +140,7 @@ class SmartCart:
         else:
             return self.deltaYaw_unfiltered
     
-    def locate_next_waypoint(self):
+    def locate_next_waypoint(self, verbose=True):
         if self.target_dist < 0.01 or self.target_dist > 10 or np.isnan(self.target_dist):
             # If target_dist is a "garbage value", return (-1,-1,-1)
             return Pose(position = Point(x = -1, y = -1, z = -1), orientation = Quaternion(w=1))
@@ -164,7 +164,8 @@ class SmartCart:
             y = x_cam * pixel_scale
             x = y_px * pixel_scale
 
-            print('x: {:.3f} y: {:.3f} d_measured: {:.3f} d_calced: {:.3f}'.format(x, y, depth, sqrt(pow(x, 2) + pow(y, 2))))
+            if verbose:
+                print('x: {:.3f} y: {:.3f} d_measured: {:.3f} d_calced: {:.3f}'.format(x, y, depth, sqrt(pow(x, 2) + pow(y, 2))))
             return Pose(position = Point(x = self.current_pose.position.x + x, y = self.current_pose.position.y + y, z = 0), orientation = Quaternion(w=1.0 ))
 
             if abs(y_disp/self.target_dist) > 1 :
