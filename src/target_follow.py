@@ -22,6 +22,12 @@ LED_PUBLISH_RATE = 3    #3Hz LED message publish rate
 TEST_PUBLISH_RATE = 1    #1Hz test messages publish rate
 QUEUE_SIZE = 10
 
+HORIZONTAL_FOV = 86 # (degrees) for D435, src: https://www.intel.com/content/www/us/en/support/articles/000030385/emerging-technologies/intel-realsense-technology.html
+VERTICAL_FOV = 57
+BALL_RADIUS = 0.096 #m (actual ball radius measured by meter rule)
+HORIZ_RESOL = 1280 #px
+VERT_RESOL = 720 #px
+
 KP_ANG = 0.8
 
 #Possible SmartCart STATES:
@@ -159,6 +165,50 @@ class SmartCart:
                 target_pose = Pose(position = Point(x = self.current_pose.position.x + x_dist_from_camera, y = self.current_pose.position.y + y_dist_from_camera, z = 0), orientation = Quaternion(w=1.0 ))
         
         self.waypoints.append(target_pose)
+
+        '''Gets the next waypoint from target_dist (subsribed package)'''
+    def get_next_waypoint_scaled(self):
+        print("Getting next Waypoint..... \n Target distance: {} mm".format(self.target_dist))
+
+        if self.target_dist < 0.01 or self.target_dist > 10 or np.isnan(self.target_dist):
+            # If target_dist is a "garbage value", return (-1,-1,-1)
+            target_pose = Pose(position = Point(x = -1, y = -1, z = -1), orientation = Quaternion(w=1))
+        else:
+            # Valid Target Distance Value
+            y_disp = self.get_horizontal_displacement()
+
+            if abs(y_disp/self.target_dist) > 1 :
+                print("MATH ERROR: y_disp={}, dist_data={}".format(y_disp, self.target_dist))
+                print("time = {}".format(rospy.Time.now()))
+            else:
+                theta = asin(y_disp / self.target_dist) # Radians
+                x_dist_from_camera = self.target_dist * cos(theta) # Unit length, rel to Follower ref frame
+                y_dist_from_camera = y_disp # Unit length, rel to Follower ref frame
+                #target_pose = Pose(position = Point(x = x_dist_from_camera, y =  y_dist_from_camera, z = 0), orientation = Quaternion(w=1.0 ))
+                print("x: ", x_dist_from_camera, " y: ", y_dist_from_camera)
+                target_pose = Pose(position = Point(x = self.current_pose.position.x + x_dist_from_camera, y = self.current_pose.position.y + y_dist_from_camera, z = 0), orientation = Quaternion(w=1.0 ))
+        
+        self.waypoints.append(target_pose)
+
+
+    '''Gets the y displacement from the center using graph tested
+    src: 
+    '''
+    def get_horizontal_displacement(self):
+        x = self.target_pos[0] - self.camera_width / 2
+        y = self.target_pos[1] - self.camera_height / 2
+        horiz_angle = x / (HORIZONTAL_FOV / 2)
+        vert_angle = y / (VERTICAL_FOV / 2)
+        corrected_dist = (self.target_dist + BALL_RADIUS) * np.cos(np.deg2rad(horiz_angle)) * np.cos(np.deg2rad(vert_angle))
+        pixel_scale = 0.0012 * corrected_dist + 6e-5 # m/px
+
+        # Theory, using FOV
+        # expected_scale = HORIZ_RESOL/(np.tan(HORIZONTAL_FOV/2)*self.target_dist)
+        expected_scale = HORIZ_RESOL/(np.tan(HORIZONTAL_FOV/2)*corrected_dist)
+
+        print("Scale Diff = {delta} ----- actual = {act}, expected = {exp}".format(delta=expected_scale-pixel_scale, act=pixel_scale, exp=expected_scale))
+
+        return (self.camera_width/2 - self.target_pos[0]) * pixel_scale # returns in m
 
 
     #Goal Setting/Getting Functions
