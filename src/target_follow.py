@@ -153,7 +153,7 @@ class SmartCart:
             y_cam = self.target_pos[1] - VERTICAL_RESOLUTION / 2 # Vertical pixels from center of camera
 
             # Construct right triangle with sides x_px, y_px, d_px in robot frame
-            x_px = (HORIZONTAL_RESOLUTION/2) / np.tan(HORIZONTAL_FOV/2)
+            x_px = (HORIZONTAL_RESOLUTION/2) / np.tan(np.deg2rad(HORIZONTAL_FOV)/2)
             y_px = x_cam
             d_px = sqrt(pow(x_px, 2) + pow(y_px, 2))
 
