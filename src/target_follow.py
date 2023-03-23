@@ -64,7 +64,8 @@ class SmartCart:
         self.target_dist = float(-1.0)
         self.target_radius = float(-1.0)
 
-        self.camera_width = 1280
+        self.camera_width = 1280    
+        self.camera_height = 720
         self.ball_radius = 0.1
 
         self.waypoints = []
@@ -144,7 +145,8 @@ class SmartCart:
             return (2*pi + self.deltaYaw_unfiltered)
         else:
             return self.deltaYaw_unfiltered
-        
+    
+
     def get_next_waypoint(self):
         #Process the next pose using target_pos, target_dist
         print(self.target_dist)
@@ -165,14 +167,11 @@ class SmartCart:
                 target_pose = Pose(position = Point(x = self.current_pose.position.x + x_dist_from_camera, y = self.current_pose.position.y + y_dist_from_camera, z = 0), orientation = Quaternion(w=1.0 ))
         
         self.waypoints.append(target_pose)
-
-        '''Gets the next waypoint from target_dist (subsribed package)'''
-    def get_next_waypoint_scaled(self):
-        print("Getting next Waypoint..... \n Target distance: {} mm".format(self.target_dist))
-
+    
+    def locate_next_waypoint(self):
         if self.target_dist < 0.01 or self.target_dist > 10 or np.isnan(self.target_dist):
             # If target_dist is a "garbage value", return (-1,-1,-1)
-            target_pose = Pose(position = Point(x = -1, y = -1, z = -1), orientation = Quaternion(w=1))
+            return Pose(position = Point(x = -1, y = -1, z = -1), orientation = Quaternion(w=1))
         else:
             # Valid Target Distance Value
             y_disp = self.get_horizontal_displacement()
@@ -180,14 +179,21 @@ class SmartCart:
             if abs(y_disp/self.target_dist) > 1 :
                 print("MATH ERROR: y_disp={}, dist_data={}".format(y_disp, self.target_dist))
                 print("time = {}".format(rospy.Time.now()))
+                return Pose(position = Point(x = -1, y = -1, z = -1), orientation = Quaternion(w=1))
             else:
                 theta = asin(y_disp / self.target_dist) # Radians
                 x_dist_from_camera = self.target_dist * cos(theta) # Unit length, rel to Follower ref frame
                 y_dist_from_camera = y_disp # Unit length, rel to Follower ref frame
                 #target_pose = Pose(position = Point(x = x_dist_from_camera, y =  y_dist_from_camera, z = 0), orientation = Quaternion(w=1.0 ))
                 print("x: ", x_dist_from_camera, " y: ", y_dist_from_camera)
-                target_pose = Pose(position = Point(x = self.current_pose.position.x + x_dist_from_camera, y = self.current_pose.position.y + y_dist_from_camera, z = 0), orientation = Quaternion(w=1.0 ))
+                return Pose(position = Point(x = self.current_pose.position.x + x_dist_from_camera, y = self.current_pose.position.y + y_dist_from_camera, z = 0), orientation = Quaternion(w=1.0 ))
         
+
+        '''Gets the next waypoint from target_dist (subsribed package)'''
+    def get_next_waypoint_scaled(self):
+        print("Getting next Waypoint..... \n Target distance: {} mm".format(self.target_dist))
+
+        target_pose = self.locate_next_waypoint()
         self.waypoints.append(target_pose)
 
 
@@ -197,7 +203,7 @@ class SmartCart:
     def get_horizontal_displacement(self):
         x = self.target_pos[0] - self.camera_width / 2
         y = self.target_pos[1] - self.camera_height / 2
-        horiz_angle = x / (HORIZONTAL_FOV / 2)
+        horiz_angle = x / (HORIZONTAL_FOV / 2) # This is an approximation
         vert_angle = y / (VERTICAL_FOV / 2)
         corrected_dist = (self.target_dist + BALL_RADIUS) * np.cos(np.deg2rad(horiz_angle)) * np.cos(np.deg2rad(vert_angle))
         pixel_scale = 0.0012 * corrected_dist + 6e-5 # m/px
@@ -209,6 +215,7 @@ class SmartCart:
         print("Scale Diff = {delta} ----- actual = {act}, expected = {exp}".format(delta=expected_scale-pixel_scale, act=pixel_scale, exp=expected_scale))
 
         return (self.camera_width/2 - self.target_pos[0]) * pixel_scale # returns in m
+
 
 
     #Goal Setting/Getting Functions
@@ -278,8 +285,8 @@ class SmartCart:
 if __name__ == "__main__":
     try:
         cart = SmartCart()
-
         while not rospy.is_shutdown():  #run infinite loop 
+            cart.locate_next_waypoint() # Constantly run to locate waypoints
             if cart.state == STATE_AT_GOAL:        #STATE_AT_GOAL = 0
                 # print("current state is: 0 (STATE_AT_GOAL)")
                 cart.atGoal()
