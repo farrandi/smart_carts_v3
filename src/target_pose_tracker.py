@@ -168,16 +168,13 @@ class ballTracker:
             print(e)
 
         depth_array = np.array(self.depth_image_raw, dtype=np.float32)
-        print(depth_array.shape)
 
         if self.circle_list is None:
-            print(distance)
             self.distance_pub.publish(float(-1.0))
         else:
             x = self.circle_list[0]
             y = self.circle_list[1]
             distance = depth_array[y][x]
-            print(distance)
             #distance = distance / 1000
             self.distance_pub.publish(float(distance))
 

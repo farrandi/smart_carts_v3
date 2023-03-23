@@ -25,7 +25,7 @@ QUEUE_SIZE = 10
 BALL_RADIUS = 0.096 # m (actual ball radius measured by meter rule)
 
 # Camera Parameters
-HORIZONTAL_FOV = 86 # (degrees) for D435, src: https://www.intel.com/content/www/us/en/support/articles/000030385/emerging-technologies/intel-realsense-technology.html
+HORIZONTAL_FOV = 68 # (degrees) for D435, 68 is measured, diff from spec: https://www.intel.com/content/www/us/en/support/articles/000030385/emerging-technologies/intel-realsense-technology.html
 VERTICAL_FOV = 57
 HORIZONTAL_RESOLUTION = 1280 # px
 VERTICAL_RESOLUTION = 720 # px
@@ -149,39 +149,25 @@ class SmartCart:
             # robot frame: x is forward, y is left, z is up, d is straight line to ball center (origin camera)
             # camera frame: x is right, y is down (origin is top left)
             depth = self.target_dist + BALL_RADIUS # Euclidean depth to ball center in m
-            x_cam= self.target_pos[0] - HORIZONTAL_RESOLUTION / 2 # Horizontal pixels from center of camera
+            x_cam = self.target_pos[0] - HORIZONTAL_RESOLUTION / 2 # Horizontal pixels from center of camera
             y_cam = self.target_pos[1] - VERTICAL_RESOLUTION / 2 # Vertical pixels from center of camera
 
+            # New code assuming the camera corrects for depth to be x
             # Construct right triangle with sides x_px, y_px, d_px in robot frame
             x_px = (HORIZONTAL_RESOLUTION/2) / np.tan(np.deg2rad(HORIZONTAL_FOV)/2)
             y_px = x_cam
-            d_px = sqrt(pow(x_px, 2) + pow(y_px, 2))
 
             # Now we have a pixel scale
-            pixel_scale = depth / d_px # m/px
+            pixel_scale = depth / x_px # m/px
 
             # Now we can convert the pixel values to meters
             y = -1 * x_cam * pixel_scale
-            x = x_px * pixel_scale
+            x = depth
 
             if verbose:
-                print('x: {:.3f} y: {:.3f} d_measured: {:.3f} d_calc: {:.3f}'.format(x, y, depth, sqrt(pow(x, 2) + pow(y, 2))))
+                print('x: {:.3f} y: {:.3f} d_calc: {:.3f}, cam_x: {:.1f}, cam_y: {:.1f}'.format(x, y, sqrt(pow(x, 2) + pow(y, 2)), self.target_pos[0], self.target_pos[1]))
             return Pose(position = Point(x = self.current_pose.position.x + x, y = self.current_pose.position.y + y, z = 0), orientation = Quaternion(w=1.0 ))
 
-            if abs(y_disp/self.target_dist) > 1 :
-                print("MATH ERROR: y_disp={}, dist_data={}".format(y_disp, self.target_dist))
-                print("time = {}".format(rospy.Time.now()))
-                return Pose(position = Point(x = -1, y = -1, z = -1), orientation = Quaternion(w=1))
-            else:
-                theta = asin(y_disp / self.target_dist) # Radians
-                x_dist_from_camera = self.target_dist * cos(theta) # Unit length, rel to Follower ref frame
-                y_dist_from_camera = y_disp # Unit length, rel to Follower ref frame
-                #target_pose = Pose(position = Point(x = x_dist_from_camera, y =  y_dist_from_camera, z = 0), orientation = Quaternion(w=1.0 ))
-                print("x: ", x_dist_from_camera, " y: ", y_dist_from_camera)
-                return Pose(position = Point(x = self.current_pose.position.x + x_dist_from_camera, y = self.current_pose.position.y + y_dist_from_camera, z = 0), orientation = Quaternion(w=1.0 ))
-        
-
-        '''Gets the next waypoint from target_dist (subsribed package)'''
     def get_next_waypoint(self):
         print("Getting next Waypoint..... \n Target distance: {} mm".format(self.target_dist))
         target_pose = self.locate_next_waypoint()
