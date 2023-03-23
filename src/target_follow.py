@@ -140,26 +140,6 @@ class SmartCart:
         else:
             return self.deltaYaw_unfiltered
     
-
-    '''Gets the y displacement from the center using graph tested
-    src: 
-    '''
-    def get_horizontal_displacement(self):
-        x = self.target_pos[0] - HORIZONTAL_RESOLUTION / 2
-        y = self.target_pos[1] - VERTICAL_RESOLUTION / 2
-        horiz_angle = x / (HORIZONTAL_FOV / 2) # This is an approximation
-        vert_angle = y / (VERTICAL_FOV / 2)
-        corrected_dist = (self.target_dist + BALL_RADIUS) * np.cos(np.deg2rad(horiz_angle)) * np.cos(np.deg2rad(vert_angle))
-        pixel_scale = 0.0012 * corrected_dist + 6e-5 # m/px
-
-        # Theory, using FOV
-        # expected_scale = HORIZONTAL_RESOLUTION/(np.tan(HORIZONTAL_FOV/2)*self.target_dist)
-        expected_scale = HORIZONTAL_RESOLUTION/(np.tan(HORIZONTAL_FOV/2)*corrected_dist)
-
-        print("Scale Diff = {delta} ----- actual = {act}, expected = {exp}".format(delta=expected_scale-pixel_scale, act=pixel_scale, exp=expected_scale))
-
-        return (HORIZONTAL_RESOLUTION/2 - self.target_pos[0]) * pixel_scale # returns in m
-
     def locate_next_waypoint(self):
         if self.target_dist < 0.01 or self.target_dist > 10 or np.isnan(self.target_dist):
             # If target_dist is a "garbage value", return (-1,-1,-1)
@@ -274,7 +254,7 @@ if __name__ == "__main__":
     try:
         cart = SmartCart()
         while not rospy.is_shutdown():  #run infinite loop 
-            cart.locate_next_waypoint_scaled() # Constantly run to locate waypoints
+            cart.locate_next_waypoint() # Constantly run to locate waypoints
             if cart.state == STATE_AT_GOAL:        #STATE_AT_GOAL = 0
                 # print("current state is: 0 (STATE_AT_GOAL)")
                 cart.atGoal()
