@@ -162,10 +162,10 @@ class SmartCart:
 
             # Now we can convert the pixel values to meters
             y = -1 * x_cam * pixel_scale
-            x = x_px * pixel_scale
+            x = depth
 
             if verbose:
-                print('x: {:.3f} y: {:.3f} d_measured: {:.3f} d_calc: {:.3f}'.format(x, y, depth, sqrt(pow(x, 2) + pow(y, 2))))
+                print('x: {:.3f} y: {:.3f} x_measured: {:.3f} d_calc: {:.3f}'.format(x, y, depth, sqrt(pow(x, 2) + pow(y, 2))))
             return Pose(position = Point(x = self.current_pose.position.x + x, y = self.current_pose.position.y + y, z = 0), orientation = Quaternion(w=1.0 ))
 
     def get_next_waypoint(self):
