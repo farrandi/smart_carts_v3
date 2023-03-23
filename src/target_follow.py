@@ -161,7 +161,7 @@ class SmartCart:
             pixel_scale = depth / d_px # m/px
 
             # Now we can convert the pixel values to meters
-            y = x_cam * pixel_scale
+            y = -1 * x_cam * pixel_scale
             x = x_px * pixel_scale
 
             if verbose:
