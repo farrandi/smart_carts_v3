@@ -130,9 +130,9 @@ class DiffTf:
             self.then = now
             elapsed = elapsed.to_sec()
             
-            print(self.left)
-            print(self.enc_left)
-            print(self.ticks_meter)
+            #print(self.left)
+            #print(self.enc_left)
+            #print(self.ticks_meter)
             # calculate odometry
             if self.enc_left == None:
                 d_left = 0
