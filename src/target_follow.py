@@ -10,25 +10,25 @@ from nav_msgs.msg import Odometry
 
 DELAY_TIME = 0.005
 
-THRESHOLD_YAW_RADIANS = (1.5)*pi/180    #when turning to goal, this is the tolerance +/- in radians 
-DISTANCE_TOLERANCE = 0.01   #robot will travel to this value in metres around the goal position
+THRESHOLD_YAW_RADIANS = (1.5)*pi/180    # when turning to goal, this is the tolerance +/- in radians 
+DISTANCE_TOLERANCE = 0.01   # robot will travel to this value in metres around the goal position
 
-MAX_LINEAR_VEL_X = 0.25     #maximum linear x velocity to use in m/s
-MAX_ANGULAR_VEL_Z = 0.25    #maximum angular z velocity to use in rad/s
-MIN_ANGULAR_VEL_Z = 0.00    #minimum angular z velocity to use in rad/s
+MAX_LINEAR_VEL_X = 0.25     # maximum linear x velocity to use in m/s
+MAX_ANGULAR_VEL_Z = 0.25    # maximum angular z velocity to use in rad/s
+MIN_ANGULAR_VEL_Z = 0.00    # minimum angular z velocity to use in rad/s
 
-VEL_PUBLISH_RATE = 20    #5Hz velocity message publish rate
-LED_PUBLISH_RATE = 3    #3Hz LED message publish rate
-TEST_PUBLISH_RATE = 1    #1Hz test messages publish rate
+VEL_PUBLISH_RATE = 20    # 5Hz velocity message publish rate
+LED_PUBLISH_RATE = 3    # 3Hz LED message publish rate
+TEST_PUBLISH_RATE = 1    # 1Hz test messages publish rate
 QUEUE_SIZE = 10
 
-BALL_RADIUS = 0.096 #m (actual ball radius measured by meter rule)
+BALL_RADIUS = 0.096 # m (actual ball radius measured by meter rule)
 
 # Camera Parameters
 HORIZONTAL_FOV = 86 # (degrees) for D435, src: https://www.intel.com/content/www/us/en/support/articles/000030385/emerging-technologies/intel-realsense-technology.html
 VERTICAL_FOV = 57
-HORIZONTAL_RESOLUTION = 1280 #px
-VERTICAL_RESOLUTION = 720 #px
+HORIZONTAL_RESOLUTION = 1280 # px
+VERTICAL_RESOLUTION = 720 # px
 
 KP_ANG = 0.8
 
@@ -44,14 +44,14 @@ class SmartCart:
         self.goal_pose = Pose(Point(0.0,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
         self.current_pose = Pose(Point(0.0,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
         self.starting_pose = Pose(Point(0.0,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
-        self.startingDistance = 0.0 #Set current distance between current_pose and goal_pose
+        self.startingDistance = 0.0 # Set current distance between current_pose and goal_pose
 
         self.vel = Twist(Vector3(0.0,0.0,0.0), Vector3(0.0,0.0,0.0))
 
         self.goalIndex = 0
-        self.currentYaw = 0.0   #robot's current angle in radians relative to odom frame's positive x-axis; CCW is positive
+        self.currentYaw = 0.0   # robot's current angle in radians relative to odom frame's positive x-axis; CCW is positive
         self.deltaYaw_unfiltered = 0.0
-        self.deltaYaw = 0.0 #difference between goalYaw and currentYaw
+        self.deltaYaw = 0.0 # difference between goalYaw and currentYaw
 
         self.LED = Bool()
         self.LED.data = 0
@@ -66,21 +66,21 @@ class SmartCart:
 
         rospy.init_node('preset_path', anonymous=True)
 
-        #NEEDED PUBLISHERS & SUBSCRIBERS
+        # NEEDED PUBLISHERS & SUBSCRIBERS
         self.vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size = QUEUE_SIZE)
         self.vel_rate = rospy.Rate(VEL_PUBLISH_RATE)
 
         self.LED_pub = rospy.Publisher('LEDsignal', Bool, queue_size = QUEUE_SIZE)
         self.LED_rate = rospy.Rate(LED_PUBLISH_RATE)
         
-        #subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
+        # subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
         self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
 
         self.target_pos_sub = rospy.Subscriber('target_position', Int32MultiArray, self.target_pos_process)
         self.target_dist_sub = rospy.Subscriber('target_distance', Float32, self.target_dist_process)
         self.target_radius_sub = rospy.Subscriber('ball_radius', Float32, self.target_radius_process)
 
-        self.state = STATE_AT_GOAL #Set state so that Initially, we get next goal from user
+        self.state = STATE_AT_GOAL # Set state so that Initially, we get next goal from user
         print("SmartCart Initialized")
 
 
@@ -146,7 +146,7 @@ class SmartCart:
             return Pose(position = Point(x = -1, y = -1, z = -1), orientation = Quaternion(w=1))
         else:
             # Convert position of ball to 3D position in camera frame
-            # robot frame: x is forward, y is left, z is up, d is straight line to ball center
+            # robot frame: x is forward, y is left, z is up, d is straight line to ball center (origin camera)
             # camera frame: x is right, y is down (origin is top left)
             depth = self.target_dist + BALL_RADIUS # Euclidean depth to ball center in m
             x_cam= self.target_pos[0] - HORIZONTAL_RESOLUTION / 2 # Horizontal pixels from center of camera
@@ -165,7 +165,7 @@ class SmartCart:
             x = y_px * pixel_scale
 
             if verbose:
-                print('x: {:.3f} y: {:.3f} d_measured: {:.3f} d_calced: {:.3f}'.format(x, y, depth, sqrt(pow(x, 2) + pow(y, 2))))
+                print('x: {:.3f} y: {:.3f} d_measured: {:.3f} d_calc: {:.3f}'.format(x, y, depth, sqrt(pow(x, 2) + pow(y, 2))))
             return Pose(position = Point(x = self.current_pose.position.x + x, y = self.current_pose.position.y + y, z = 0), orientation = Quaternion(w=1.0 ))
 
             if abs(y_disp/self.target_dist) > 1 :
@@ -187,8 +187,8 @@ class SmartCart:
         target_pose = self.locate_next_waypoint()
         self.waypoints.append(target_pose)
 
-    #Goal Setting/Getting Functions
-    #STATE 0
+    # Goal Setting/Getting Functions
+    # STATE 0
     def atGoal(self):
         self.set_vel(0.0, 0.0)
         self.set_LED(1)
@@ -201,10 +201,10 @@ class SmartCart:
         self.state = STATE_GET_NEXT_GOAL
         print("Current state is: 1 (STATE_GET_NEXT_GOAL)")
 
-    #STATE 1
+    # STATE 1
     def getNextGoal(self):
         if len(self.waypoints) == 0:
-            #Wait for next waypoint
+            # Wait for next waypoint
             raw_input("Press Enter to register next waypoint")
             self.get_next_waypoint()
             print("Got Next waypoint : ", self.waypoints[0])
@@ -228,7 +228,7 @@ class SmartCart:
             print("Goal position you input is too close to the current position, please change your waypoints so they are greater than ", DISTANCE_TOLERANCE, "metres from each other")
             self.state = STATE_COMPLETE
 
-    #STATE 2
+    # STATE 2
     def turnToGoal(self):
         self.deltaYaw = self.get_deltaYaw()
 
@@ -242,7 +242,7 @@ class SmartCart:
             self.state = STATE_DRIVE_TO_GOAL
             print("current state is: 3 (STATE_DRIVE_TO_GOAL)")
 
-    #STATE 3
+    # STATE 3
     def driveToGoal(self):
         if (self.euclidean_distance() > DISTANCE_TOLERANCE) and (self.distance_travelled() < self.startingDistance):
             self.set_vel(MAX_LINEAR_VEL_X, (KP_ANG * self.deltaYaw) )
@@ -255,7 +255,7 @@ if __name__ == "__main__":
     try:
         cart = SmartCart()
         while not rospy.is_shutdown():  #run infinite loop 
-            cart.locate_next_waypoint() # Constantly run to locate waypoints
+            cart.locate_next_waypoint(verbose=True) # Constantly run to locate waypoints
             if cart.state == STATE_AT_GOAL:        #STATE_AT_GOAL = 0
                 # print("current state is: 0 (STATE_AT_GOAL)")
                 cart.atGoal()
