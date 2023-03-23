@@ -4,7 +4,7 @@ import numpy as np
 from tf.transformations import euler_from_quaternion
 
 import rospy
-from geometry_msgs.msg import Pose, Point, Quaternion, Twist
+from geometry_msgs.msg import Pose, Point, Quaternion, Twist, Vector3
 from std_msgs.msg import Bool, Int32MultiArray, Float32
 from nav_msgs.msg import Odometry
 
@@ -22,11 +22,13 @@ LED_PUBLISH_RATE = 3    #3Hz LED message publish rate
 TEST_PUBLISH_RATE = 1    #1Hz test messages publish rate
 QUEUE_SIZE = 10
 
+BALL_RADIUS = 0.096 #m (actual ball radius measured by meter rule)
+
+# Camera Parameters
 HORIZONTAL_FOV = 86 # (degrees) for D435, src: https://www.intel.com/content/www/us/en/support/articles/000030385/emerging-technologies/intel-realsense-technology.html
 VERTICAL_FOV = 57
-BALL_RADIUS = 0.096 #m (actual ball radius measured by meter rule)
-HORIZ_RESOL = 1280 #px
-VERT_RESOL = 720 #px
+HORIZONTAL_RESOLUTION = 1280 #px
+VERTICAL_RESOLUTION = 720 #px
 
 KP_ANG = 0.8
 
@@ -44,13 +46,7 @@ class SmartCart:
         self.starting_pose = Pose(Point(0.0,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
         self.startingDistance = 0.0 #Set current distance between current_pose and goal_pose
 
-        self.vel = Twist()
-        self.vel.linear.x = 0.0
-        self.vel.linear.y = 0.0
-        self.vel.linear.z = 0.0
-        self.vel.angular.x = 0.0
-        self.vel.angular.y = 0.0
-        self.vel.angular.z = 0.0
+        self.vel = Twist(Vector3(0.0,0.0,0.0), Vector3(0.0,0.0,0.0))
 
         self.goalIndex = 0
         self.currentYaw = 0.0   #robot's current angle in radians relative to odom frame's positive x-axis; CCW is positive
@@ -64,8 +60,6 @@ class SmartCart:
         self.target_dist = float(-1.0)
         self.target_radius = float(-1.0)
 
-        self.camera_width = 1280    
-        self.camera_height = 720
         self.ball_radius = 0.1
 
         self.waypoints = []
@@ -147,34 +141,51 @@ class SmartCart:
             return self.deltaYaw_unfiltered
     
 
-    def get_next_waypoint(self):
-        #Process the next pose using target_pos, target_dist
-        print(self.target_dist)
-        if self.target_dist < 0.01 or self.target_dist > 10 or np.isnan(self.target_dist):
-            target_pose = Pose(position = Point(x = -1, y = -1, z = -1), orientation = Quaternion(w=1))
-        else:
-            pixel_scale = self.target_radius/self.ball_radius # Pixels/unit Length
-            y_dist_from_center = (self.camera_width/2 - self.target_pos[0]) / pixel_scale # Unit length
-            if abs(y_dist_from_center/self.target_dist) > 1 :
-                print("MATH ERROR: y_dist_from_center={}, dist_data={}".format(y_dist_from_center, self.target_dist))
-                print("time = {}".format(rospy.Time.now()))
-            else:
-                theta = asin(y_dist_from_center / self.target_dist) # Radians
-                x_dist_from_camera = self.target_dist * cos(theta) # Unit length, rel to Follower ref frame
-                y_dist_from_camera = y_dist_from_center # Unit length, rel to Follower ref frame
-                #target_pose = Pose(position = Point(x = x_dist_from_camera, y =  y_dist_from_camera, z = 0), orientation = Quaternion(w=1.0 ))
-                print("x: ", x_dist_from_camera, " y: ", y_dist_from_camera)
-                target_pose = Pose(position = Point(x = self.current_pose.position.x + x_dist_from_camera, y = self.current_pose.position.y + y_dist_from_camera, z = 0), orientation = Quaternion(w=1.0 ))
-        
-        self.waypoints.append(target_pose)
-    
+    '''Gets the y displacement from the center using graph tested
+    src: 
+    '''
+    def get_horizontal_displacement(self):
+        x = self.target_pos[0] - HORIZONTAL_RESOLUTION / 2
+        y = self.target_pos[1] - VERTICAL_RESOLUTION / 2
+        horiz_angle = x / (HORIZONTAL_FOV / 2) # This is an approximation
+        vert_angle = y / (VERTICAL_FOV / 2)
+        corrected_dist = (self.target_dist + BALL_RADIUS) * np.cos(np.deg2rad(horiz_angle)) * np.cos(np.deg2rad(vert_angle))
+        pixel_scale = 0.0012 * corrected_dist + 6e-5 # m/px
+
+        # Theory, using FOV
+        # expected_scale = HORIZONTAL_RESOLUTION/(np.tan(HORIZONTAL_FOV/2)*self.target_dist)
+        expected_scale = HORIZONTAL_RESOLUTION/(np.tan(HORIZONTAL_FOV/2)*corrected_dist)
+
+        print("Scale Diff = {delta} ----- actual = {act}, expected = {exp}".format(delta=expected_scale-pixel_scale, act=pixel_scale, exp=expected_scale))
+
+        return (HORIZONTAL_RESOLUTION/2 - self.target_pos[0]) * pixel_scale # returns in m
+
     def locate_next_waypoint(self):
         if self.target_dist < 0.01 or self.target_dist > 10 or np.isnan(self.target_dist):
             # If target_dist is a "garbage value", return (-1,-1,-1)
             return Pose(position = Point(x = -1, y = -1, z = -1), orientation = Quaternion(w=1))
         else:
-            # Valid Target Distance Value
-            y_disp = self.get_horizontal_displacement()
+            # Convert position of ball to 3D position in camera frame
+            # robot frame: x is forward, y is left, z is up, d is straight line to ball center
+            # camera frame: x is right, y is down (origin is top left)
+            depth = self.target_dist + BALL_RADIUS # Euclidean depth to ball center in m
+            x_cam= self.target_pos[0] - HORIZONTAL_RESOLUTION / 2 # Horizontal pixels from center of camera
+            y_cam = self.target_pos[1] - VERTICAL_RESOLUTION / 2 # Vertical pixels from center of camera
+
+            # Construct right triangle with sides x_px, y_px, d_px in robot frame
+            x_px = (HORIZONTAL_RESOLUTION/2) / np.tan(HORIZONTAL_FOV/2)
+            y_px = x_cam
+            d_px = sqrt(pow(x_px, 2) + pow(y_px, 2))
+
+            # Now we have a pixel scale
+            pixel_scale = depth / d_px # m/px
+
+            # Now we can convert the pixel values to meters
+            y = x_cam * pixel_scale
+            x = y_px * pixel_scale
+
+            print('x: {:.3f} y: {:.3f} d_measured: {:.3f} d_calced: {:.3f}'.format(x, y, depth, sqrt(pow(x, 2) + pow(y, 2))))
+            return Pose(position = Point(x = self.current_pose.position.x + x, y = self.current_pose.position.y + y, z = 0), orientation = Quaternion(w=1.0 ))
 
             if abs(y_disp/self.target_dist) > 1 :
                 print("MATH ERROR: y_disp={}, dist_data={}".format(y_disp, self.target_dist))
@@ -190,33 +201,10 @@ class SmartCart:
         
 
         '''Gets the next waypoint from target_dist (subsribed package)'''
-    def get_next_waypoint_scaled(self):
+    def get_next_waypoint(self):
         print("Getting next Waypoint..... \n Target distance: {} mm".format(self.target_dist))
-
         target_pose = self.locate_next_waypoint()
         self.waypoints.append(target_pose)
-
-
-    '''Gets the y displacement from the center using graph tested
-    src: 
-    '''
-    def get_horizontal_displacement(self):
-        x = self.target_pos[0] - self.camera_width / 2
-        y = self.target_pos[1] - self.camera_height / 2
-        horiz_angle = x / (HORIZONTAL_FOV / 2) # This is an approximation
-        vert_angle = y / (VERTICAL_FOV / 2)
-        corrected_dist = (self.target_dist + BALL_RADIUS) * np.cos(np.deg2rad(horiz_angle)) * np.cos(np.deg2rad(vert_angle))
-        pixel_scale = 0.0012 * corrected_dist + 6e-5 # m/px
-
-        # Theory, using FOV
-        # expected_scale = HORIZ_RESOL/(np.tan(HORIZONTAL_FOV/2)*self.target_dist)
-        expected_scale = HORIZ_RESOL/(np.tan(HORIZONTAL_FOV/2)*corrected_dist)
-
-        print("Scale Diff = {delta} ----- actual = {act}, expected = {exp}".format(delta=expected_scale-pixel_scale, act=pixel_scale, exp=expected_scale))
-
-        return (self.camera_width/2 - self.target_pos[0]) * pixel_scale # returns in m
-
-
 
     #Goal Setting/Getting Functions
     #STATE 0
@@ -286,7 +274,7 @@ if __name__ == "__main__":
     try:
         cart = SmartCart()
         while not rospy.is_shutdown():  #run infinite loop 
-            cart.locate_next_waypoint() # Constantly run to locate waypoints
+            cart.locate_next_waypoint_scaled() # Constantly run to locate waypoints
             if cart.state == STATE_AT_GOAL:        #STATE_AT_GOAL = 0
                 # print("current state is: 0 (STATE_AT_GOAL)")
                 cart.atGoal()
