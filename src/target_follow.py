@@ -162,7 +162,7 @@ class SmartCart:
 
             # Now we can convert the pixel values to meters
             y = x_cam * pixel_scale
-            x = y_px * pixel_scale
+            x = x_px * pixel_scale
 
             if verbose:
                 print('x: {:.3f} y: {:.3f} d_measured: {:.3f} d_calc: {:.3f}'.format(x, y, depth, sqrt(pow(x, 2) + pow(y, 2))))
