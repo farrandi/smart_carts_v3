@@ -77,7 +77,7 @@ class SmartCart:
         self.LED_rate = rospy.Rate(LED_PUBLISH_RATE)
         
         #subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
-        self.odom_sub = rospy.Subscriber('robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)
+        self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
 
         self.state = STATE_AT_GOAL #Set state so that Initially, we get next goal from user
 
