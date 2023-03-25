@@ -11,13 +11,13 @@ import csv
 
 #Layout Preset Path in Waypoint Poses
 
-WP0 = Pose(Point(0.5,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
-WP1 = Pose(Point(0.5,0.5,0.0), Quaternion(0.0,0.0,0.0,1.0))
+WP0 = Pose(Point(1.5,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
+WP1 = Pose(Point(1.5,0.5,0.0), Quaternion(0.0,0.0,0.0,1.0))
 WP2 = Pose(Point(0.0,0.5,0.0), Quaternion(0.0,0.0,0.0,1.0))
 WP3 = Pose(Point(0.0,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
 #WP4 = Pose(Point(0.0,3.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
 #WP5 = Pose(Point(0.0,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
-LOOP = True
+LOOP = False
 
 DELAY_TIME = 0.005
 
@@ -81,7 +81,7 @@ class SmartCart:
 
         self.state = STATE_AT_GOAL #Set state so that Initially, we get next goal from user
 
-        self.csv_file = open("/home/fizzer/SmartCartsV2/data/dist.csv", "w")
+        self.csv_file = open("/home/fizzer/catkin_ws/src/data/dist.csv", "w")
         self.csv_writer = csv.writer(self.csv_file)
         self.csv_writer.writerow(["goal x", "goal y", "true x", "true y", "error"])
 
