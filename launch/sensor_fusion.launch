@@ -21,8 +21,10 @@
     _world_frame:="enu" \
     /imu/data_raw:=/camera/imu \
     /imu/data:=/imu_data -->
-    
-<node pkg="imu_filter_madgwick" type="imu_filter_madgwick" name="imu_filter_node">
+
+
+
+<node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter_madgwick">
     <param name="_use_mag" value="false"/>
     <param name="_publish_tf" value="false"/>
     <param name="_world_frame" value="enu"/>
