@@ -157,7 +157,7 @@ class DiffTf:
                 # calculate distance traveled in x and y
                 x = cos( th ) * d
                 y = -sin( th ) * d
-                print(x)
+                #print(x)
                 # calculate the final position of the robot
                 self.x = self.x + ( cos( self.th ) * x - sin( self.th ) * y )
                 self.y = self.y + ( sin( self.th ) * x + cos( self.th ) * y )
