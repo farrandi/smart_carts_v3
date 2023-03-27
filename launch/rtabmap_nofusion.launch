@@ -24,9 +24,9 @@
     /imu/data:=/imu_data -->
 
 <node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter_madgwick">
-    <param name="_use_mag" value="false"/>
-    <param name="_publish_tf" value="false"/>
-    <param name="_world_frame" value="enu"/>
+    <param name="use_mag" value="false"/>
+    <param name="publish_tf" value="false"/>
+    <param name="world_frame" value="enu"/>
 
     <remap from="/imu/data_raw" to="/camera/imu"/>
     <remap from="/imu/data" to="/imu_data"/>
@@ -44,6 +44,7 @@
     <arg name="wait_imu_to_init" value="false" />
     <arg name="imu_topic" value="/imu_data" />
     <arg name="odom_topic" value="/odom" />
+
 </include>
 
 </launch>
