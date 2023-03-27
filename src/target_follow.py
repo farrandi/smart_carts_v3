@@ -149,8 +149,8 @@ class SmartCart:
             # robot frame: x is forward, y is left, z is up, d is straight line to ball center (origin camera)
             # camera frame: x is right, y is down (origin is top left)
             depth = self.target_dist + BALL_RADIUS # Euclidean depth to ball center in m
-            x_cam = self.target_pos.data[0] - HORIZONTAL_RESOLUTION / 2 # Horizontal pixels from center of camera
-            y_cam = self.target_pos.data[1] - VERTICAL_RESOLUTION / 2 # Vertical pixels from center of camera
+            x_cam = self.target_pos[0] - HORIZONTAL_RESOLUTION / 2 # Horizontal pixels from center of camera
+            y_cam = self.target_pos[1] - VERTICAL_RESOLUTION / 2 # Vertical pixels from center of camera
 
             # New code assuming the camera corrects for depth to be x
             # Construct right triangle with sides x_px, y_px, d_px in robot frame
