@@ -217,7 +217,8 @@ class SmartCart:
     # STATE 2
     def turnToGoal(self):
         self.deltaYaw = self.get_deltaYaw()
-
+        print("Delta Yaw: ", self.deltaYaw)
+        print("Current Yaw: ", self.currentYaw)
         if abs(self.deltaYaw) > THRESHOLD_YAW_RADIANS:
             self.set_vel(0.0, (KP_ANG * self.deltaYaw) )
         else:
@@ -231,7 +232,7 @@ class SmartCart:
     # STATE 3
     def driveToGoal(self):
         if (self.euclidean_distance() > DISTANCE_TOLERANCE) and (self.distance_travelled() < self.startingDistance):
-            self.set_vel(MAX_LINEAR_VEL_X, (KP_ANG * self.deltaYaw) )
+            self.set_vel(MAX_LINEAR_VEL_X, 0.0)
             # print("distance travelled is:", self.distance_travelled())
         else:
             self.state = STATE_AT_GOAL
