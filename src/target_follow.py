@@ -132,7 +132,7 @@ class SmartCart:
     def get_deltaYaw(self):
         # atan2(y, x) returns value of atan(y/x) in radians. The atan2() method returns a numeric value between -pi and pi representing the angle theta of a (x, y) point and positive x-axis.
         self.deltaYaw_unfiltered = atan2(self.goal_pose.position.y - self.current_pose.position.y, self.goal_pose.position.x - self.current_pose.position.x) - self.currentYaw
-
+        
         if self.deltaYaw_unfiltered > pi:
             return (self.deltaYaw_unfiltered - 2*pi)
         elif self.deltaYaw_unfiltered < (-1*pi):
@@ -170,7 +170,7 @@ class SmartCart:
 
     def get_next_waypoint(self):
         print("Getting next Waypoint..... \n Target distance: {} mm".format(self.target_dist))
-        target_pose = self.locate_next_waypoint()
+        target_pose = self.locate_next_waypoint(verbose=False)
         self.waypoints.append(target_pose)
 
     # Goal Setting/Getting Functions
@@ -217,8 +217,8 @@ class SmartCart:
     # STATE 2
     def turnToGoal(self):
         self.deltaYaw = self.get_deltaYaw()
-        print("Delta Yaw: ", self.deltaYaw)
-        print("Current Yaw: ", self.currentYaw)
+        #print("Delta Yaw: ", self.deltaYaw)
+        #print("Current Yaw: ", self.currentYaw)
         if abs(self.deltaYaw) > THRESHOLD_YAW_RADIANS:
             self.set_vel(0.0, (KP_ANG * self.deltaYaw) )
         else:
@@ -242,7 +242,7 @@ if __name__ == "__main__":
     try:
         cart = SmartCart()
         while not rospy.is_shutdown():  #run infinite loop 
-            cart.locate_next_waypoint(verbose=True) # Constantly run to locate waypoints
+            cart.locate_next_waypoint(verbose=False) # Constantly run to locate waypoints
             if cart.state == STATE_AT_GOAL:        #STATE_AT_GOAL = 0
                 # print("current state is: 0 (STATE_AT_GOAL)")
                 cart.atGoal()
