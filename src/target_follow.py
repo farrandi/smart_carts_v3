@@ -166,7 +166,7 @@ class SmartCart:
 
             if verbose:
                 print('x: {:.3f} y: {:.3f} d_calc: {:.3f}, cam_x: {:.1f}, cam_y: {:.1f}'.format(x, y, sqrt(pow(x, 2) + pow(y, 2)), self.target_pos[0], self.target_pos[1]))
-            return Pose(position = Point(x = self.current_pose.position.x + x, y = self.current_pose.position.y + y, z = 0), orientation = Quaternion(w=1.0 ))
+            return Pose(position = Point(x = self.current_pose.position.x + x + 0.375, y = self.current_pose.position.y + y, z = 0), orientation = Quaternion(w=1.0 ))
 
     def get_next_waypoint(self):
         print("Getting next Waypoint..... \n Target distance: {} mm".format(self.target_dist))
