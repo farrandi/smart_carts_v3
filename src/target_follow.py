@@ -170,7 +170,7 @@ class SmartCart:
 
     def get_next_waypoint(self):
         print("Getting next Waypoint..... \n Target distance: {} mm".format(self.target_dist))
-        target_pose = self.locate_next_waypoint(verbose=False)
+        target_pose = self.locate_next_waypoint(verbose=True)
         self.waypoints.append(target_pose)
 
     # Goal Setting/Getting Functions
