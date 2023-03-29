@@ -5,7 +5,6 @@ This is essentially a waypoint publisher. These generates waypoints and publishe
 Published:
     /target_position
     /target_distance
-    /ball_radius
 Subscribed:
     /camera/color/image_raw
     /camera/aligned_depth_to_color/image_raw
@@ -54,7 +53,6 @@ class ballTracker:
         # Initialize Publishers
         self.position_pub = rospy.Publisher('target_position', Int32MultiArray, queue_size = 10)
         self.distance_pub = rospy.Publisher('target_distance', Float32, queue_size = 10)
-        self.radius_pub = rospy.Publisher('/ball_radius', Float32, queue_size = 10)
         # self.target_pose_pub = rospy.Publisher("/target_pose", PoseStamped, queue_size = 1)
 
 
@@ -107,31 +105,6 @@ class ballTracker:
                 circle = [int(x),int(y),int(radius)]
                 return circle
         return None
-    
-
-    '''Calculate leader pose from postion/distance + modelstate pose, pos=List, dist,radius-Float32, returns Pose of target
-    Retreived from target_pose_tracking.py (sim)
-    '''
-    # Unsure of self.ball_radius and self.camera_width
-    # Also uses Pose, 
-    def calc_leader_pose(self, pos, dist, radius):
-        if self.camera_width is not None and \
-                            pos is not [-1,-1] and \
-                            dist != -1.0 and \
-                            radius != -1.0 :
-            # Below is calculation from the ball tracking inputs to "physical" dimensions
-            # +x and +y designations based on gazebo sim defaults
-            pixel_scale = radius/self.ball_radius # Pixels/unit Length
-            y_dist_from_center = (self.camera_width/2 - pos[0]) / pixel_scale # Unit length
-            if abs(y_dist_from_center/dist) > 1 :
-                print("MATH ERROR: y_dist_from_center={}, dist_data={}".format(y_dist_from_center, dist))
-                print("time = {}".format(rospy.Time.now()))
-            else:
-                theta = math.asin(y_dist_from_center / dist) # Radians
-                x_dist_from_camera = dist * math.cos(theta) # Unit length, rel to Follower ref frame
-                y_dist_from_camera = y_dist_from_center # Unit length, rel to Follower ref frame
-                return Pose(position = Point(x = x_dist_from_camera, y = y_dist_from_camera, z = 0), orientation = Quaternion(w=1.0 ))
-        return None
 
 
     ########## Callback Functions ###############
@@ -179,22 +152,6 @@ class ballTracker:
             distance = depth_array[y][x]
             #distance = distance / 1000
             self.distance_pub.publish(float(distance))
-
-            # Condition from target_pose_tracking.py (Sim)
-            # Still uses target pose...
-            #if distance < 0.01 or distance > 10 or np.isnan(distance):
-            #    print("BAD")
-            #    self.distance_pub.publish(float(-1.0))
-            #else:
-            #    print("GOOD")
-            #    self.distance_pub.publish(distance)
-                #target_pose = self.calc_leader_pose([x,y], distance, radius)
-                #if self.twist.angular.z > 0:
-                    #target_pose == target_position ??
-                #    self.target_pose_pub.publish(self.no_ball_poseStamped())
-                #else:
-                #    self.target_pose_pub.publish(PoseStamped(header = Header(stamp = rospy.Time.now(), frame_id = "follower"), \
-                #                                            pose = target_pose))
         return
 
 def main(args):

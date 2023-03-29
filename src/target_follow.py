@@ -7,7 +7,6 @@ Subscribed:
     /odom
     /target_position
     /target_distance
-    /ball_radius
 
 Written by: Iain, Farrandi, Sean
 '''
@@ -72,7 +71,6 @@ class SmartCart:
 
         self.target_pos = Int32MultiArray(data=[-1,-1])
         self.target_dist = float(-1.0)
-        self.target_radius = float(-1.0)
 
         self.ball_radius = 0.1
 
@@ -92,7 +90,6 @@ class SmartCart:
 
         self.target_pos_sub = rospy.Subscriber('target_position', Int32MultiArray, self.target_pos_process)
         self.target_dist_sub = rospy.Subscriber('target_distance', Float32, self.target_dist_process)
-        self.target_radius_sub = rospy.Subscriber('ball_radius', Float32, self.target_radius_process)
 
         self.state = STATE_AT_GOAL # Set state so that Initially, we get next goal from user
         print("SmartCart Initialized")
@@ -133,9 +130,6 @@ class SmartCart:
 
     def target_dist_process(self, distData):
         self.target_dist = distData.data / 1000.0
-
-    def target_radius_process(self, radData):
-        self.target_radius = radData.data
 
     def euclidean_distance(self):
         return sqrt( pow((self.goal_pose.position.x - self.current_pose.position.x), 2) + pow((self.goal_pose.position.y - self.current_pose.position.y), 2) )
