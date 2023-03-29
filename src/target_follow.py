@@ -20,7 +20,7 @@ import numpy as np
 from tf.transformations import euler_from_quaternion
 
 import rospy
-from geometry_msgs.msg import Pose, Point, Quaternion, Twist, Vector3
+from geometry_msgs.msg import Pose, PoseStamped, Point, Quaternion, Twist, Vector3, Header
 from std_msgs.msg import Bool, Int32MultiArray, Float32
 from nav_msgs.msg import Odometry
 
@@ -91,7 +91,7 @@ class SmartCart:
         self.LED_pub = rospy.Publisher('LEDsignal', Bool, queue_size = QUEUE_SIZE)
         self.LED_rate = rospy.Rate(LED_PUBLISH_RATE)
 
-        self.target_pose_pub = rospy.Publisher('target_pose', Pose, queue_size = QUEUE_SIZE)
+        self.target_pose_pub = rospy.Publisher('target_pose', PoseStamped, queue_size = QUEUE_SIZE)
         
         # subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
         self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
@@ -210,6 +210,10 @@ class SmartCart:
                     print("Waypoint queue is full, removing first element")
                 self.waypoint_queue.pop(0)
             self.waypoint_queue.append(target_pose)
+            # publish new waypoint as type PoseStamped
+            target_pose_stamped = PoseStamped(header = Header(stamp = rospy.Time.now(), frame_id = "base_link"), \
+                                                            pose = target_pose)
+
             self.target_pose_pub.publish(target_pose)
             if verbose:
                 print("Waypoint added to queue")
