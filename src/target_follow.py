@@ -1,4 +1,18 @@
 #!/usr/bin/env python
+'''
+Published:
+    /cmd_vel
+    /LEDsignal
+Subscribed:
+    /odom
+    /target_position
+    /target_distance
+    /ball_radius
+
+Written by: Iain, Farrandi, Sean
+'''
+
+
 from math import pow, atan2, sqrt, pi, asin, cos
 import numpy as np
 from tf.transformations import euler_from_quaternion
@@ -173,7 +187,7 @@ class SmartCart:
         target_pose = self.locate_next_waypoint()
         self.waypoints.append(target_pose)
 
-    # Goal Setting/Getting Functions
+############################################## Goal Setting/Getting Functions ########################################################
     # STATE 0
     def atGoal(self):
         self.set_vel(0.0, 0.0)
@@ -236,6 +250,7 @@ class SmartCart:
         else:
             self.state = STATE_AT_GOAL
             print("current state is: 0 (STATE_AT_GOAL)")
+
 
 if __name__ == "__main__":
     try:

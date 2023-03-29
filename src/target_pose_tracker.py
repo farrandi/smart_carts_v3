@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 '''
+This is essentially a waypoint publisher. These generates waypoints and publishes them.
+
 Published:
     /target_position
     /target_distance
@@ -50,9 +52,9 @@ class ballTracker:
         self.color_sub = rospy.Subscriber('/camera/color/image_raw'.format(self.namespace), Image, self.color_callback, queue_size = 2)
         self.depth_sub = rospy.Subscriber('/camera/aligned_depth_to_color/image_raw', Image, self.depth_callback, queue_size = 2)
         # Initialize Publishers
-        self.position_pub = rospy.Publisher('target_position', Int32MultiArray, queue_size = 2)
-        self.distance_pub = rospy.Publisher('target_distance', Float32, queue_size = 2)
-        self.radius_pub = rospy.Publisher('/ball_radius', Float32, queue_size = 2)
+        self.position_pub = rospy.Publisher('target_position', Int32MultiArray, queue_size = 10)
+        self.distance_pub = rospy.Publisher('target_distance', Float32, queue_size = 10)
+        self.radius_pub = rospy.Publisher('/ball_radius', Float32, queue_size = 10)
         # self.target_pose_pub = rospy.Publisher("/target_pose", PoseStamped, queue_size = 1)
 
 
