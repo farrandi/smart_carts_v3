@@ -5,6 +5,7 @@ Robot controller that follows the target ball by subcribing to the target_positi
 Published:
     /cmd_vel
     /LEDsignal
+    /target_pose
 Subscribed:
     /odom
     /target_position
@@ -89,6 +90,8 @@ class SmartCart:
 
         self.LED_pub = rospy.Publisher('LEDsignal', Bool, queue_size = QUEUE_SIZE)
         self.LED_rate = rospy.Rate(LED_PUBLISH_RATE)
+
+        self.target_pose_pub = rospy.Publisher('target_pose', Pose, queue_size = QUEUE_SIZE)
         
         # subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
         self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
@@ -200,6 +203,7 @@ class SmartCart:
                     print("Waypoint queue is full, removing first element")
                 self.waypoint_queue.pop(0);
             self.waypoint_queue.append(target_pose)
+            self.target_pose_pub.publish(target_pose)
             if verbose:
                 print("Waypoint added to queue")
 
