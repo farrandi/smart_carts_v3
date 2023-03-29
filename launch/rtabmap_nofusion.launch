@@ -23,14 +23,14 @@
     /imu/data_raw:=/camera/imu \
     /imu/data:=/imu_data -->
 
-<!-- <node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter_madgwick">
+<node pkg="imu_filter_madgwick" type="imu_filter_node" name="imu_filter_madgwick">
     <param name="use_mag" value="false"/>
     <param name="publish_tf" value="false"/>
     <param name="world_frame" value="enu"/>
 
     <remap from="/imu/data_raw" to="/camera/imu"/>
     <remap from="/imu/data" to="/imu_data"/>
-</node> -->
+</node>
 
 
 <!-- launch rtabmap -->
