@@ -193,9 +193,16 @@ class SmartCart:
             print("Getting next Waypoint..... \n Target distance: {} mm".format(self.target_dist))
         target_pose = self.locate_next_waypoint(verbose=verbose)
 
+        if len(self.waypoint_queue) == 0:
+            # queue is empty, add first element
+            self.waypoint_queue.append(target_pose)
+            self.target_pose_pub.publish(target_pose)
+            if verbose:
+                print("First waypoint added to queue")
+            return
+        
+        # check if new waypoint is different from last waypoint
         last_pose = self.waypoint_queue[-1]
-
-        # x,y coordinates are in m
         if abs(target_pose.position.x - last_pose.position.x) > NEXT_WAYPOINT_TOLERANCE or abs(target_pose.position.y - last_pose.position.y) > NEXT_WAYPOINT_TOLERANCE:
             if len(self.waypoint_queue) > MAX_WAYPOINT_QUEUE_SIZE:
                 # queue is full, remove first element and add last element
