@@ -72,6 +72,9 @@ class SmartCart:
 
         self.LED_pub = rospy.Publisher('LEDsignal', Bool, queue_size = QUEUE_SIZE)
         self.LED_rate = rospy.Rate(LED_PUBLISH_RATE)
+
+        self.target_pose_pub = rospy.Publisher('target_pose', Pose, queue_size = QUEUE_SIZE)
+
         
         # subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
         self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
@@ -166,7 +169,9 @@ class SmartCart:
 
             if verbose:
                 print('x: {:.3f} y: {:.3f} d_calc: {:.3f}, cam_x: {:.1f}, cam_y: {:.1f}'.format(x, y, sqrt(pow(x, 2) + pow(y, 2)), self.target_pos[0], self.target_pos[1]))
-            return Pose(position = Point(x = self.current_pose.position.x + x, y = self.current_pose.position.y + y, z = 0), orientation = Quaternion(w=1.0 ))
+            waypoint = Pose(position = Point(x = self.current_pose.position.x + x, y = self.current_pose.position.y + y, z = 0), orientation = Quaternion(w=1.0 ))
+            self.target_pose_pub.publish(waypoint)
+            return waypoint
 
     def get_next_waypoint(self):
         print("Getting next Waypoint..... \n Target distance: {} mm".format(self.target_dist))
