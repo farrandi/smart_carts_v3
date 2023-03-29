@@ -208,7 +208,7 @@ class SmartCart:
                 # queue is full, remove first element and add last element
                 if verbose:
                     print("Waypoint queue is full, removing first element")
-                self.''waypoint_queue''.pop(0);
+                self.waypoint_queue.pop(0)
             self.waypoint_queue.append(target_pose)
             self.target_pose_pub.publish(target_pose)
             if verbose:
