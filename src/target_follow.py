@@ -182,7 +182,7 @@ class SmartCart:
 
             if verbose:
                 print('x: {:.3f} y: {:.3f} d_calc: {:.3f}, cam_x: {:.1f}, cam_y: {:.1f}'.format(x, y, sqrt(pow(x, 2) + pow(y, 2)), self.target_pos[0], self.target_pos[1]))
-            return Pose(position = Point(x = self.current_pose.position.x + x, y = self.current_pose.position.y + y, z = 0), oriefntation = Quaternion(w=1.0 ))
+            return Pose(position = Point(x = self.current_pose.position.x + x, y = self.current_pose.position.y + y, z = 0), orientation = Quaternion(w=1.0 ))
 
     ''' 
     Add a new waypoint to the waypoint queue when certain conditions are fullfilled
@@ -201,7 +201,7 @@ class SmartCart:
                 # queue is full, remove first element and add last element
                 if verbose:
                     print("Waypoint queue is full, removing first element")
-                self.waypoint_queue.pop(0);
+                self.''waypoint_queue''.pop(0);
             self.waypoint_queue.append(target_pose)
             self.target_pose_pub.publish(target_pose)
             if verbose:
