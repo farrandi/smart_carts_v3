@@ -41,6 +41,7 @@ STATE_COMPLETE = 4
 
 class SmartCart:
     def __init__(self):
+        rospy.sleep(1.0)
         self.goal_pose = Pose(Point(0.0,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
         self.current_pose = Pose(Point(0.0,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
         self.starting_pose = Pose(Point(0.0,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
@@ -148,7 +149,7 @@ class SmartCart:
             # Convert position of ball to 3D position in camera frame
             # robot frame: x is forward, y is left, z is up, d is straight line to ball center (origin camera)
             # camera frame: x is right, y is down (origin is top left)
-            depth = self.target_dist + BALL_RADIUS # Euclidean depth to ball center in m
+            depth = self.target_dist + BALL_RADIUS/2 # Euclidean depth to ball center in m
             x_cam = self.target_pos[0] - HORIZONTAL_RESOLUTION / 2 # Horizontal pixels from center of camera
             y_cam = self.target_pos[1] - VERTICAL_RESOLUTION / 2 # Vertical pixels from center of camera
 
