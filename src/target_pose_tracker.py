@@ -131,7 +131,6 @@ class ballTracker:
             color_image = cv2.circle(color_image, (x,y), radius, (0, 255, 255), 2)
             position_data = Int32MultiArray(data=[x,y])
             self.position_pub.publish(position_data)
-            self.radius_pub.publish(radius)
         cv2.imshow("RGB", color_image)
         cv2.waitKey(3)
         return
