@@ -193,7 +193,8 @@ class SmartCart:
             print("Getting next Waypoint..... \n Target distance: {} mm".format(self.target_dist))
         target_pose = self.locate_next_waypoint(verbose=verbose)
 
-        if len(self.waypoint_queue) == 0:
+        # check if queue is empty and target_pose is not (-1,-1,-1), z is only -1 if it is not a valid waypoint
+        if len(self.waypoint_queue) == 0 and not target_pose.position.z == -1:
             # queue is empty, add first element
             self.waypoint_queue.append(target_pose)
             if verbose:
