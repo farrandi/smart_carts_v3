@@ -290,7 +290,7 @@ if __name__ == "__main__":
     try:
         cart = SmartCart()
         while not rospy.is_shutdown():  #run infinite loop 
-            cart.get_next_waypoint(verbose=True) # Constantly run to add next waypoint to queue
+            cart.get_next_waypoint(verbose=False) # Constantly run to add next waypoint to queue
             if cart.state == STATE_AT_GOAL:        #STATE_AT_GOAL = 0
                 # print("current state is: 0 (STATE_AT_GOAL)")
                 cart.atGoal()
