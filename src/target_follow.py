@@ -196,7 +196,6 @@ class SmartCart:
         if len(self.waypoint_queue) == 0:
             # queue is empty, add first element
             self.waypoint_queue.append(target_pose)
-            self.target_pose_pub.publish(target_pose)
             if verbose:
                 print("First waypoint added to queue")
             return
