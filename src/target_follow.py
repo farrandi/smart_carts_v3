@@ -202,7 +202,9 @@ class SmartCart:
         
         # check if new waypoint is different from last waypoint
         last_pose = self.waypoint_queue[-1]
-        if abs(target_pose.position.x - last_pose.position.x) > NEXT_WAYPOINT_TOLERANCE or abs(target_pose.position.y - last_pose.position.y) > NEXT_WAYPOINT_TOLERANCE:
+        if abs(target_pose.position.x - last_pose.position.x) > NEXT_WAYPOINT_TOLERANCE \
+            or abs(target_pose.position.y - last_pose.position.y) > NEXT_WAYPOINT_TOLERANCE\
+            or not (target_pose.position.x == -1 and target_pose.position.y == -1):
             if len(self.waypoint_queue) > MAX_WAYPOINT_QUEUE_SIZE:
                 # queue is full, remove first element and add last element
                 if verbose:
