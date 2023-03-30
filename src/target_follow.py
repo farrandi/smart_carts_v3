@@ -214,7 +214,7 @@ class SmartCart:
             target_pose_stamped = PoseStamped(header = Header(stamp = rospy.Time.now(), frame_id = "base_link"), \
                                                             pose = target_pose)
 
-            self.target_pose_pub.publish(target_pose)
+            self.target_pose_pub.publish(target_pose_stamped)
             if verbose:
                 print("Waypoint added to queue")
 
