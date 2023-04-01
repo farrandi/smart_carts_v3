@@ -6,6 +6,7 @@ import rospy
 from geometry_msgs.msg import Pose, Point, Quaternion, Twist, PoseWithCovarianceStamped
 from std_msgs.msg import Bool
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import Imu
 
 import csv
 
@@ -79,12 +80,20 @@ class SmartCart:
         #subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
         # self.odom_sub = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)
         self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
+        self.imu_filter_sub = rospy.Subscriber('/imu_data', Imu, self.imuProcess)
+        self.imu_raw_sub = rospy.Subscriber('camera/imu', Imu, self.rawImuProcess)
 
         self.state = STATE_AT_GOAL #Set state so that Initially, we get next goal from user
 
         self.csv_file = open("/home/fizzer/catkin_ws/src/data/dist.csv", "w")
+        self.raw_imu_file = open("/home/fizzer/catkin_ws/src/data/raw_imu.csv", "w")
+        self.filtered_imu_file = open("/home/fizzer/catkin_ws/src/data/filtered_imu.csv", "w")
         self.csv_writer = csv.writer(self.csv_file)
+        self.raw_imu_writer = csv.writer(self.raw_imu_file)
+        self.filtered_imu_writer = csv.writer(self.filtered_imu_file)
         self.csv_writer.writerow(["goal x", "goal y", "true x", "true y", "error", "dist travelled", "yaw"])
+        self.raw_imu_writer.writerow(["x", "y", "z", "angular_vel x", "angular_vel y", "angular_vel z", "linear_accel x", "linear_accel y", "linear_accel z"])
+        self.filtered_imu_writer.writerow(["x", "y", "z", "angular_vel x", "angular_vel y", "angular_vel z", "linear_accel x", "linear_accel y", "linear_accel z"])
 
         print("SmartCart Initialized")
 
@@ -122,6 +131,18 @@ class SmartCart:
         data = [self.goal_pose.position.x, self.goal_pose.position.y, odomData.pose.pose.position.x, odomData.pose.pose.position.y, self.euclidean_distance(), self.distance_travelled(), self.currentYaw]
         print("Saving CSV")
         self.csv_writer.writerow(data)
+
+    def imuProcess(self, imuData):
+        data = [imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, 
+                imuData.angular_velocity.x, imuData.angular_velocity.y, imuData.angular_velocity.z, 
+                imuData.linear_acceleration.x, imuData.linear_acceleration.y, imuData.linear_acceleration.z]
+        self.filtered_imu_writer.writerow(data)
+    
+    def rawImuProcess(self, imuData):
+        data = [imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, 
+                imuData.angular_velocity.x, imuData.angular_velocity.y, imuData.angular_velocity.z, 
+                imuData.linear_acceleration.x, imuData.linear_acceleration.y, imuData.linear_acceleration.z]
+        self.raw_imu_writer.writerow(data)
 
 
     def euclidean_distance(self):
@@ -229,6 +250,8 @@ if __name__ == "__main__":
                 cart.set_vel(0.0, 0.0)
 
         cart.csv_file.close()
+        cart.filtered_imu_file.close()
+        cart.raw_imu_file.close()
 
     except rospy.ROSInterruptException: pass
 
