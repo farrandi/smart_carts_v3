@@ -1,11 +1,27 @@
 #!/usr/bin/env python
+'''
+Robot controller that follows the target ball by subcribing to the target_position topic.
+
+Published:
+    /cmd_vel
+    /LEDsignal
+    /target_pose
+Subscribed:
+    /odom
+    /target_position
+    /target_distance
+
+Written by: Iain, Farrandi, Sean (March 2023)
+'''
+
+
 from math import pow, atan2, sqrt, pi, asin, cos
 import numpy as np
 from tf.transformations import euler_from_quaternion
 
 import rospy
-from geometry_msgs.msg import Pose, Point, Quaternion, Twist, Vector3
-from std_msgs.msg import Bool, Int32MultiArray, Float32
+from geometry_msgs.msg import Pose, PoseStamped, Point, Quaternion, Twist, Vector3
+from std_msgs.msg import Bool, Int32MultiArray, Float32, Header
 from nav_msgs.msg import Odometry
 
 DELAY_TIME = 0.005
@@ -23,6 +39,10 @@ TEST_PUBLISH_RATE = 1    # 1Hz test messages publish rate
 QUEUE_SIZE = 10
 
 BALL_RADIUS = 0.096 # m (actual ball radius measured by meter rule)
+
+# Waypoint_queue Parameters
+MAX_WAYPOINT_QUEUE_SIZE = 10
+NEXT_WAYPOINT_TOLERANCE = 0.2 # m
 
 # Camera Parameters
 HORIZONTAL_FOV = 68 # (degrees) for D435, 68 is measured, diff from spec: https://www.intel.com/content/www/us/en/support/articles/000030385/emerging-technologies/intel-realsense-technology.html
@@ -48,7 +68,6 @@ class SmartCart:
 
         self.vel = Twist(Vector3(0.0,0.0,0.0), Vector3(0.0,0.0,0.0))
 
-        self.goalIndex = 0
         self.currentYaw = 0.0   # robot's current angle in radians relative to odom frame's positive x-axis; CCW is positive
         self.deltaYaw_unfiltered = 0.0
         self.deltaYaw = 0.0 # difference between goalYaw and currentYaw
@@ -58,11 +77,10 @@ class SmartCart:
 
         self.target_pos = Int32MultiArray(data=[-1,-1])
         self.target_dist = float(-1.0)
-        self.target_radius = float(-1.0)
 
         self.ball_radius = 0.1
 
-        self.waypoints = []
+        self.waypoint_queue = []
 
         rospy.init_node('preset_path', anonymous=True)
 
@@ -72,13 +90,14 @@ class SmartCart:
 
         self.LED_pub = rospy.Publisher('LEDsignal', Bool, queue_size = QUEUE_SIZE)
         self.LED_rate = rospy.Rate(LED_PUBLISH_RATE)
+
+        self.target_pose_pub = rospy.Publisher('target_pose', PoseStamped, queue_size = QUEUE_SIZE)
         
         # subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
         self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
 
         self.target_pos_sub = rospy.Subscriber('target_position', Int32MultiArray, self.target_pos_process)
         self.target_dist_sub = rospy.Subscriber('target_distance', Float32, self.target_dist_process)
-        self.target_radius_sub = rospy.Subscriber('ball_radius', Float32, self.target_radius_process)
 
         self.state = STATE_AT_GOAL # Set state so that Initially, we get next goal from user
         print("SmartCart Initialized")
@@ -119,9 +138,6 @@ class SmartCart:
 
     def target_dist_process(self, distData):
         self.target_dist = distData.data / 1000.0
-
-    def target_radius_process(self, radData):
-        self.target_radius = radData.data
 
     def euclidean_distance(self):
         return sqrt( pow((self.goal_pose.position.x - self.current_pose.position.x), 2) + pow((self.goal_pose.position.y - self.current_pose.position.y), 2) )
@@ -168,36 +184,67 @@ class SmartCart:
                 print('x: {:.3f} y: {:.3f} d_calc: {:.3f}, cam_x: {:.1f}, cam_y: {:.1f}'.format(x, y, sqrt(pow(x, 2) + pow(y, 2)), self.target_pos[0], self.target_pos[1]))
             return Pose(position = Point(x = self.current_pose.position.x + x, y = self.current_pose.position.y + y, z = 0), orientation = Quaternion(w=1.0 ))
 
-    def get_next_waypoint(self):
-        print("Getting next Waypoint..... \n Target distance: {} mm".format(self.target_dist))
-        target_pose = self.locate_next_waypoint()
-        self.waypoints.append(target_pose)
+    ''' 
+    Add a new waypoint to the waypoint queue when certain conditions are fullfilled
+    Calls locate_next_waypoint() to get the next waypoint
+    '''
+    def get_next_waypoint(self, verbose=True):
+        if verbose:
+            print("Getting next Waypoint..... \n Target distance: {} mm".format(self.target_dist))
+        target_pose = self.locate_next_waypoint(verbose=verbose)
 
-    # Goal Setting/Getting Functions
+        # check if queue is empty
+        if len(self.waypoint_queue) == 0:
+            # target_pose is not (-1,-1,-1), z is only -1 if it is not a valid waypoint
+            if target_pose.position.z != -1:
+                # add first element if queue is empty and waypoint is valid
+                self.waypoint_queue.append(target_pose)
+                if verbose:
+                    print("First waypoint added to queue")
+            return
+        
+        # check if new waypoint is different from last waypoint
+        last_pose = self.waypoint_queue[-1]
+        if abs(target_pose.position.x - last_pose.position.x) > NEXT_WAYPOINT_TOLERANCE \
+            or abs(target_pose.position.y - last_pose.position.y) > NEXT_WAYPOINT_TOLERANCE\
+            or not (target_pose.position.x == -1 and target_pose.position.y == -1):
+            if len(self.waypoint_queue) > MAX_WAYPOINT_QUEUE_SIZE:
+                # queue is full, remove first element and add last element
+                if verbose:
+                    print("Waypoint queue is full, removing first element")
+                self.waypoint_queue.pop(0)
+            self.waypoint_queue.append(target_pose)
+            # publish new waypoint as type PoseStamped
+            target_pose_stamped = PoseStamped(header = Header(stamp = rospy.Time.now(), frame_id = "base_link"), \
+                                                            pose = target_pose)
+
+            self.target_pose_pub.publish(target_pose_stamped)
+            if verbose:
+                print("Waypoint added to queue")
+
+############################################## Goal Setting/Getting Functions ########################################################
     # STATE 0
     def atGoal(self):
+        print("current state is: 0 (STATE_AT_GOAL)")
         self.set_vel(0.0, 0.0)
         self.set_LED(1)
-        if len(self.waypoints) != 0:
-            self.waypoints.pop(0)
-        print("Goal Reached!")
-        print("")
-        print("")
+        print("Goal Reached!\n\n")
 
         self.state = STATE_GET_NEXT_GOAL
-        print("Current state is: 1 (STATE_GET_NEXT_GOAL)")
+        return
 
     # STATE 1
     def getNextGoal(self):
-        if len(self.waypoints) == 0:
-            # Wait for next waypoint
-            raw_input("Press Enter to register next waypoint")
-            self.get_next_waypoint()
-            print("Got Next waypoint : ", self.waypoints[0])
+        print("current state is: 1 (STATE_GET_NEXT_GOAL)")
+        if len(self.waypoint_queue) == 0:
+            self.state = STATE_AT_GOAL
+            return
+        
+        self.goal_pose = self.waypoint_queue.pop(0)
+        # next_pose = self.waypoint_queue.pop(0)
+        # self.goal_pose.position.x = next_pose.position.x
+        # self.goal_pose.position.y = next_pose.position.y
 
-        self.goal_pose.position.x = self.waypoints[0].position.x
-        self.goal_pose.position.y = self.waypoints[0].position.y
-        self.goalIndex += 1
         rospy.sleep(1.0)
         print("CURRENT : ", self.current_pose)
         print("GOAL : ", self.goal_pose)
@@ -209,13 +256,15 @@ class SmartCart:
 
             self.set_LED(0)
             self.state = STATE_TURN_TO_GOAL
-            print("Current state is: 2 (STATE_TURN_TO_GOAL)")
+            
         else:
             print("Goal position you input is too close to the current position, please change your waypoints so they are greater than ", DISTANCE_TOLERANCE, "metres from each other")
-            self.state = STATE_COMPLETE
+            self.state = STATE_AT_GOAL
+        return
 
     # STATE 2
     def turnToGoal(self):
+        print("Current state is: 2 (STATE_TURN_TO_GOAL)")
         self.deltaYaw = self.get_deltaYaw()
 
         if abs(self.deltaYaw) > THRESHOLD_YAW_RADIANS:
@@ -226,22 +275,25 @@ class SmartCart:
             rospy.sleep(1.0)
 
             self.state = STATE_DRIVE_TO_GOAL
-            print("current state is: 3 (STATE_DRIVE_TO_GOAL)")
+        return
 
     # STATE 3
     def driveToGoal(self):
+        print("current state is: 3 (STATE_DRIVE_TO_GOAL)")
         if (self.euclidean_distance() > DISTANCE_TOLERANCE) and (self.distance_travelled() < self.startingDistance):
             self.set_vel(MAX_LINEAR_VEL_X, (KP_ANG * self.deltaYaw) )
             # print("distance travelled is:", self.distance_travelled())
         else:
             self.state = STATE_AT_GOAL
-            print("current state is: 0 (STATE_AT_GOAL)")
+        return
+            
+
 
 if __name__ == "__main__":
     try:
         cart = SmartCart()
         while not rospy.is_shutdown():  #run infinite loop 
-            cart.locate_next_waypoint(verbose=True) # Constantly run to locate waypoints
+            cart.get_next_waypoint(verbose=False) # Constantly run to add next waypoint to queue
             if cart.state == STATE_AT_GOAL:        #STATE_AT_GOAL = 0
                 # print("current state is: 0 (STATE_AT_GOAL)")
                 cart.atGoal()
