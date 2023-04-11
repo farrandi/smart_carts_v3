@@ -180,9 +180,10 @@ class SmartCart:
             y = -1 * x_cam * pixel_scale
             x = depth
 
+            offset = 0.375
             if verbose:
                 print('x: {:.3f} y: {:.3f} d_calc: {:.3f}, cam_x: {:.1f}, cam_y: {:.1f}'.format(x, y, sqrt(pow(x, 2) + pow(y, 2)), self.target_pos[0], self.target_pos[1]))
-            return Pose(position = Point(x = self.current_pose.position.x + x, y = self.current_pose.position.y + y, z = 0), orientation = Quaternion(w=1.0 ))
+            return Pose(position = Point(x = self.current_pose.position.x + x - offset, y = self.current_pose.position.y + y, z = 0), orientation = Quaternion(w=1.0 ))
 
     ''' 
     Add a new waypoint to the waypoint queue when certain conditions are fullfilled
