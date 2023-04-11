@@ -32,6 +32,21 @@
     <remap from="/imu/data" to="/imu_data"/>
 </node>
 
+<!-- launch robot_pose_ekf -->
+<node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
+    <!-- NEED CHANGE RELEVANT SUBSCRIBERS (RTABMAP_ROS) TO SUBSCRIBE TO /odom_combined instead of /odom-->
+    <param name="output_frame" value="odom_combined"/>  
+    <!-- Unsure about the value for the base_frame. It should be the frame of the robot. Not sure what the base frame is actually called. I assume base_link -->
+    <param name="base_footprint_frame" value="base_link"/>  
+    <param name="freq" value="30.0"/>
+    <param name="sensor_timeout" value="1.0"/>  
+    <!-- wheel odometry -->
+    <param name="odom_used" value="true"/>
+    <param name="imu_used" value="true"/>
+    <param name="vo_used" value="false"/>
+
+    <!-- <remap from="odom" to="pr2_base_odometry/odom" /> -->
+</node>
 
 <!-- launch rtabmap -->
 <!-- this also launches rviz -->
@@ -43,7 +58,7 @@
     <arg name="approx_sync" value="false" />
     <arg name="wait_imu_to_init" value="false" />
     <arg name="imu_topic" value="/imu_data" />
-    <arg name="odom_topic" value="/odom" />
+    <arg name="odom_topic" value="/robot_pose_ekf/odom" />
 
 </include>
 
