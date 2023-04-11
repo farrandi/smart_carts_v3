@@ -262,7 +262,12 @@ class SmartCart:
             self.state = STATE_AT_GOAL
             return
 
-        self.goal_pose = self.waypoint_queue.pop(0) - self.current_pose
+        # take the next waypoint from the queue and transforms it to account for the current position of the robot
+        # self.goal_pose =
+        next_pose = self.waypoint_queue.pop(0)
+        self.goal_pose = Pose(position=Point(x=next_pose.position.x - self.current_pose.position.x,
+                              y=next_pose.position.y - self.current_pose.position.y, z=0), orientation=Quaternion(w=1.0))
+        # self.waypoint_queue.pop(0) - self.current_pose
         # next_pose = self.waypoint_queue.pop(0)
         # self.goal_pose.position.x = next_pose.position.x
         # self.goal_pose.position.y = next_pose.position.y
