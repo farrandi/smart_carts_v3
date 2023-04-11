@@ -12,9 +12,9 @@ import csv
 #Layout Preset Path in Waypoint Poses
 
 WP0 = Pose(Point(0.5,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
-WP1 = Pose(Point(0.5,0.5,0.0), Quaternion(0.0,0.0,0.0,1.0))
-WP2 = Pose(Point(0.0,0.5,0.0), Quaternion(0.0,0.0,0.0,1.0))
-WP3 = Pose(Point(0.0,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
+WP1 = Pose(Point(1.0,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
+WP2 = Pose(Point(1.5,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
+WP3 = Pose(Point(2.0,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
 #WP4 = Pose(Point(0.0,3.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
 #WP5 = Pose(Point(0.0,0.0,0.0), Quaternion(0.0,0.0,0.0,1.0))
 LOOP = True
