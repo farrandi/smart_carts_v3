@@ -94,8 +94,8 @@ class SmartCart:
         self.target_pose_pub = rospy.Publisher('target_pose', PoseStamped, queue_size = QUEUE_SIZE)
         
         # subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
-        self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
-        # self.odom_sub = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)
+        # self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
+        self.odom_sub = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)
 
 
         self.target_pos_sub = rospy.Subscriber('target_position', Int32MultiArray, self.target_pos_process)
