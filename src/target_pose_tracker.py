@@ -27,10 +27,10 @@ import sys
 import time
 
 ####### GLOBAL VARIABLES ########
-LOWER_RED1 = np.array([0,200,120])
+LOWER_RED1 = np.array([0,200,50])
 UPPER_RED1 = np.array([10,255,255])
 
-LOWER_RED2 = np.array([170,200,120])
+LOWER_RED2 = np.array([170,200,50])
 UPPER_RED2 = np.array([180,255,255])
 
 # LOWER_GREEN = np.array([40, 40, 40])
