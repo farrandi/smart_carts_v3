@@ -20,7 +20,7 @@ import numpy as np
 from tf.transformations import euler_from_quaternion
 
 import rospy
-from geometry_msgs.msg import Pose, PoseStamped, Point, Quaternion, Twist, Vector3
+from geometry_msgs.msg import Pose, PoseStamped, Point, Quaternion, Twist, Vector3, PoseWithCovarianceStamped
 from std_msgs.msg import Bool, Int32MultiArray, Float32, Header
 from nav_msgs.msg import Odometry
 
@@ -95,6 +95,8 @@ class SmartCart:
         
         # subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
         self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
+        # self.odom_sub = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)
+
 
         self.target_pos_sub = rospy.Subscriber('target_position', Int32MultiArray, self.target_pos_process)
         self.target_dist_sub = rospy.Subscriber('target_distance', Float32, self.target_dist_process)
