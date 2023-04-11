@@ -31,7 +31,7 @@ THRESHOLD_YAW_RADIANS = (1.5)*pi/180
 # robot will travel to this value in metres around the goal position
 DISTANCE_TOLERANCE = 0.01
 
-MAX_LINEAR_VEL_X = 0.25     # maximum linear x velocity to use in m/s
+MAX_LINEAR_VEL_X = 0.5     # maximum linear x velocity to use in m/s
 MAX_ANGULAR_VEL_Z = 0.25    # maximum angular z velocity to use in rad/s
 MIN_ANGULAR_VEL_Z = 0.0    # minimum angular z velocity to use in rad/s
 
