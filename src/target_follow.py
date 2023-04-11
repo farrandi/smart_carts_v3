@@ -202,7 +202,7 @@ class SmartCart:
             if verbose:
                 print('x: {:.3f} y: {:.3f} d_calc: {:.3f}, cam_x: {:.1f}, cam_y: {:.1f}'.format(
                     x, y, sqrt(pow(x, 2) + pow(y, 2)), self.target_pos[0], self.target_pos[1]))
-            return Pose(position=Point(x=self.current_pose.position.x + x - offset, y=self.current_pose.position.y + y, z=0), orientation=Quaternion(w=1.0))
+            return Pose(position=Point(x=self.current_pose.position.x + x, y=self.current_pose.position.y + y, z=0), orientation=Quaternion(w=1.0))
 
     ''' 
     Add a new waypoint to the waypoint queue when certain conditions are fullfilled
@@ -263,14 +263,10 @@ class SmartCart:
             return
 
         # take the next waypoint from the queue and transforms it to account for the current position of the robot
-        # self.goal_pose =
-        next_pose = self.waypoint_queue.pop(0)
-        self.goal_pose = Pose(position=Point(x=next_pose.position.x - self.current_pose.position.x,
-                              y=next_pose.position.y - self.current_pose.position.y, z=0), orientation=Quaternion(w=1.0))
-        # self.waypoint_queue.pop(0) - self.current_pose
+        self.goal_pose = self.waypoint_queue.pop(0)
         # next_pose = self.waypoint_queue.pop(0)
-        # self.goal_pose.position.x = next_pose.position.x
-        # self.goal_pose.position.y = next_pose.position.y
+        # self.goal_pose = Pose(position=Point(x=next_pose.position.x - self.current_pose.position.x,
+        #                       y=next_pose.position.y - self.current_pose.position.y, z=0), orientation=Quaternion(w=1.0))
 
         rospy.sleep(1.0)
         print("CURRENT : ", self.current_pose)
