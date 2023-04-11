@@ -4,7 +4,7 @@ Robot controller that follows the target ball by subcribing to the target_positi
 
 Published:
     /cmd_vel
-    /LEDsignal
+    /LEDsignal    
     /target_pose
 Subscribed:
     /odom
@@ -31,7 +31,7 @@ DISTANCE_TOLERANCE = 0.01   # robot will travel to this value in metres around t
 
 MAX_LINEAR_VEL_X = 0.25     # maximum linear x velocity to use in m/s
 MAX_ANGULAR_VEL_Z = 0.25    # maximum angular z velocity to use in rad/s
-MIN_ANGULAR_VEL_Z = 0.05    # minimum angular z velocity to use in rad/s
+MIN_ANGULAR_VEL_Z = 0.0    # minimum angular z velocity to use in rad/s
 
 VEL_PUBLISH_RATE = 20    # 5Hz velocity message publish rate
 LED_PUBLISH_RATE = 3    # 3Hz LED message publish rate
@@ -50,7 +50,7 @@ VERTICAL_FOV = 57
 HORIZONTAL_RESOLUTION = 1280 # px
 VERTICAL_RESOLUTION = 720 # px
 
-KP_ANG = 0.9
+KP_ANG = 1
 
 #Possible SmartCart STATES:
 STATE_AT_GOAL = 0
@@ -94,8 +94,8 @@ class SmartCart:
         self.target_pose_pub = rospy.Publisher('target_pose', PoseStamped, queue_size = QUEUE_SIZE)
         
         # subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
-        # self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
-        self.odom_sub = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)
+        self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
+        # self.odom_sub = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)
 
 
         self.target_pos_sub = rospy.Subscriber('target_position', Int32MultiArray, self.target_pos_process)
