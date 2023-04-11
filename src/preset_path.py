@@ -78,6 +78,7 @@ class SmartCart:
         self.LED_rate = rospy.Rate(LED_PUBLISH_RATE)
         
         #subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
+        # self.odom_sub = rospy.Subscriber('/mono_odometer/odometry', Odometry, self.odomProcess)
         # self.odom_sub = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)
         self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
         self.imu_filter_sub = rospy.Subscriber('/imu_data', Imu, self.imuProcess)
@@ -129,7 +130,7 @@ class SmartCart:
         self.current_pose.position.y = odomData.pose.pose.position.y
         self.currentYaw = euler_from_quaternion([odomData.pose.pose.orientation.x, odomData.pose.pose.orientation.y, odomData.pose.pose.orientation.z, odomData.pose.pose.orientation.w])[2]
         data = [self.goal_pose.position.x, self.goal_pose.position.y, odomData.pose.pose.position.x, odomData.pose.pose.position.y, self.euclidean_distance(), self.distance_travelled(), self.currentYaw]
-        print("Saving CSV")
+        # print("Saving CSV")
         self.csv_writer.writerow(data)
 
     def imuProcess(self, imuData):
