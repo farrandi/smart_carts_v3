@@ -31,7 +31,7 @@ DISTANCE_TOLERANCE = 0.01   # robot will travel to this value in metres around t
 
 MAX_LINEAR_VEL_X = 0.25     # maximum linear x velocity to use in m/s
 MAX_ANGULAR_VEL_Z = 0.25    # maximum angular z velocity to use in rad/s
-MIN_ANGULAR_VEL_Z = 0.00    # minimum angular z velocity to use in rad/s
+MIN_ANGULAR_VEL_Z = 0.05    # minimum angular z velocity to use in rad/s
 
 VEL_PUBLISH_RATE = 20    # 5Hz velocity message publish rate
 LED_PUBLISH_RATE = 3    # 3Hz LED message publish rate
@@ -50,7 +50,7 @@ VERTICAL_FOV = 57
 HORIZONTAL_RESOLUTION = 1280 # px
 VERTICAL_RESOLUTION = 720 # px
 
-KP_ANG = 0.8
+KP_ANG = 0.9
 
 #Possible SmartCart STATES:
 STATE_AT_GOAL = 0
