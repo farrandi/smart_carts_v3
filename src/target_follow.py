@@ -4,7 +4,7 @@ Robot controller that follows the target ball by subcribing to the target_positi
 
 Published:
     /cmd_vel
-    /LEDsignal    
+    /LEDsignal
     /target_pose
 Subscribed:
     /odom
@@ -31,9 +31,9 @@ THRESHOLD_YAW_RADIANS = (1.5)*pi/180
 # robot will travel to this value in metres around the goal position
 DISTANCE_TOLERANCE = 0.01
 
-MAX_LINEAR_VEL_X = 0.5     # maximum linear x velocity to use in m/s
+MAX_LINEAR_VEL_X = 0.25     # maximum linear x velocity to use in m/s
 MAX_ANGULAR_VEL_Z = 0.25    # maximum angular z velocity to use in rad/s
-MIN_ANGULAR_VEL_Z = 0.0    # minimum angular z velocity to use in rad/s
+MIN_ANGULAR_VEL_Z = 0.00    # minimum angular z velocity to use in rad/s
 
 VEL_PUBLISH_RATE = 20    # 5Hz velocity message publish rate
 LED_PUBLISH_RATE = 3    # 3Hz LED message publish rate
@@ -43,7 +43,7 @@ QUEUE_SIZE = 10
 BALL_RADIUS = 0.096  # m (actual ball radius measured by meter rule)
 
 # Waypoint_queue Parameters
-MAX_WAYPOINT_QUEUE_SIZE = 10
+MAX_WAYPOINT_QUEUE_SIZE = 30
 NEXT_WAYPOINT_TOLERANCE = 0.2  # m
 
 # Camera Parameters
@@ -53,7 +53,7 @@ VERTICAL_FOV = 57
 HORIZONTAL_RESOLUTION = 1280  # px
 VERTICAL_RESOLUTION = 720  # px
 
-KP_ANG = 1
+KP_ANG = 0.8
 
 # Possible SmartCart STATES:
 STATE_AT_GOAL = 0
@@ -198,7 +198,6 @@ class SmartCart:
             y = -1 * x_cam * pixel_scale
             x = depth
 
-            offset = 0.375
             if verbose:
                 print('x: {:.3f} y: {:.3f} d_calc: {:.3f}, cam_x: {:.1f}, cam_y: {:.1f}'.format(
                     x, y, sqrt(pow(x, 2) + pow(y, 2)), self.target_pos[0], self.target_pos[1]))
@@ -262,11 +261,10 @@ class SmartCart:
             self.state = STATE_AT_GOAL
             return
 
-        # take the next waypoint from the queue and transforms it to account for the current position of the robot
         self.goal_pose = self.waypoint_queue.pop(0)
         # next_pose = self.waypoint_queue.pop(0)
-        # self.goal_pose = Pose(position=Point(x=next_pose.position.x - self.current_pose.position.x,
-        #                       y=next_pose.position.y - self.current_pose.position.y, z=0), orientation=Quaternion(w=1.0))
+        # self.goal_pose.position.x = next_pose.position.x
+        # self.goal_pose.position.y = next_pose.position.y
 
         rospy.sleep(1.0)
         print("CURRENT : ", self.current_pose)
