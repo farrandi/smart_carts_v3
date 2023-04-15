@@ -79,8 +79,8 @@ class SmartCart:
         
         #subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
         # self.odom_sub = rospy.Subscriber('/mono_odometer/odometry', Odometry, self.odomProcess)
-        # self.odom_sub = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)
-        self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
+        self.odom_sub = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)
+        # self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
         self.imu_filter_sub = rospy.Subscriber('/imu_data', Imu, self.imuProcess)
         self.imu_raw_sub = rospy.Subscriber('camera/imu', Imu, self.rawImuProcess)
 

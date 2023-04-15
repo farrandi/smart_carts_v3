@@ -1,11 +1,11 @@
 <launch>
   <!-- launch camera -->
-  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+  <!-- <include file="$(find realsense2_camera)/launch/rs_camera.launch">
       <arg name="align_depth" value="true"/>
     <arg name="unite_imu_method" value="linear_interpolation"/>
       <arg name="enable_gyro" value="true"/>
       <arg name="enable_accel" value="true"/>
-  </include>
+  </include> -->
 
   <arg name="camera" default="/camera/color"/>
   <arg name="bagfile" default="performance_test.bag"/>
@@ -22,13 +22,13 @@
   <node pkg="tf" type="static_transform_publisher" name="odom_to_map" args="0 0 0 0 -1.57079632679 -1.57079632679 visual_odom map 30"/>
 
   <!-- Viso2 -->
-  <node pkg="viso2_ros" type="mono_odometer" name="mono_odometer" output="screen">
+  <node pkg="viso2_ros" type="mono_odometer" name="viso2" output="screen">
     <!-- <remap from="image" to="/camera/depth/image_rect_raw"/> -->
     <!-- <remap from="image" to="/camera/aligned_depth_to_color/image_raw"/> -->
     <remap from="image" to="/camera/color/image_raw"/>
 
     <param name="base_link_frame_id" value="$(arg camera)"/>
-    <param name="odom_frame_id" value="visual_odom"/>
+    <param name="odom_frame_id" value="camera_imu_optical_frame"/>
 
     <param name="max_features" value="10" />
     <param name="motion_threshold" value="350" />
