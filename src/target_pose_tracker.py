@@ -27,15 +27,14 @@ import sys
 import time
 
 ####### GLOBAL VARIABLES ########
-LOWER_RED1 = np.array([0,200,20])
-UPPER_RED1 = np.array([10,255,255])
+LOWER_RED1 = np.array([0, 200, 20])
+UPPER_RED1 = np.array([10, 255, 255])
 
-LOWER_RED2 = np.array([170,200,20])
-UPPER_RED2 = np.array([180,255,255])
+LOWER_RED2 = np.array([170, 200, 20])
+UPPER_RED2 = np.array([180, 255, 255])
 
 # LOWER_GREEN = np.array([40, 40, 40])
 # UPPER_GREEN = np.array([70,255,255])
-
 
 
 class ballTracker:
@@ -48,13 +47,16 @@ class ballTracker:
 
         print("HERE")
         # Initialize Subscribers
-        self.color_sub = rospy.Subscriber('/camera/color/image_raw'.format(self.namespace), Image, self.color_callback, queue_size = 2)
-        self.depth_sub = rospy.Subscriber('/camera/aligned_depth_to_color/image_raw', Image, self.depth_callback, queue_size = 2)
+        self.color_sub = rospy.Subscriber(
+            '/camera/color/image_raw'.format(self.namespace), Image, self.color_callback, queue_size=2)
+        self.depth_sub = rospy.Subscriber(
+            '/camera/aligned_depth_to_color/image_raw', Image, self.depth_callback, queue_size=2)
         # Initialize Publishers
-        self.position_pub = rospy.Publisher('target_position', Int32MultiArray, queue_size = 10)
-        self.distance_pub = rospy.Publisher('target_distance', Float32, queue_size = 10)
+        self.position_pub = rospy.Publisher(
+            'target_position', Int32MultiArray, queue_size=10)
+        self.distance_pub = rospy.Publisher(
+            'target_distance', Float32, queue_size=10)
         # self.target_pose_pub = rospy.Publisher("/target_pose", PoseStamped, queue_size = 1)
-
 
         # Do we need the lines below?
 
@@ -68,13 +70,14 @@ class ballTracker:
         self.circle_list = None
 
     '''Takes in an img given by cv2.imread and applies the following filters, returns the filtered image'''
+
     def contour_filter(self, img):
         image = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
         mask1 = cv2.inRange(image, LOWER_RED1, UPPER_RED1)
         mask2 = cv2.inRange(image, LOWER_RED2, UPPER_RED2)
         mask = mask1 + mask2
-        #mask = cv2.inRange(image, LOWER_GREEN, UPPER_GREEN)
+        # mask = cv2.inRange(image, LOWER_GREEN, UPPER_GREEN)
 
         return mask
 
@@ -83,9 +86,11 @@ class ballTracker:
     Finds the contours and appends the x,y,radius,timestamp lists from results of each image
     Returns [circle_list] a list for information about enclosing circle (x,y,radius)
     '''
+
     def parse_color_image(self, mask):
         # Finding Contours
-        image_, contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        image_, contours, hierarchy = cv2.findContours(
+            mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         # Find max contour area
         i = 0
         maxContour = 0
@@ -102,14 +107,14 @@ class ballTracker:
             # Drawing on image the circle & corresponding centroid calculated above if circle is detected
             # Also populating x,y,radius lists
             if radius > 10:
-                circle = [int(x),int(y),int(radius)]
+                circle = [int(x), int(y), int(radius)]
                 return circle
         return None
-
 
     ########## Callback Functions ###############
 
     '''Parse color frames from camera'''
+
     def color_callback(self, image):
         try:
             # time_start = rospy.Time.now()
@@ -123,13 +128,14 @@ class ballTracker:
         self.circle_list = self.parse_color_image(mask)
 
         if self.circle_list is None:
-            self.position_pub.publish(Int32MultiArray(data=[-1,-1]))
+            self.position_pub.publish(Int32MultiArray(data=[-1, -1]))
         else:
-            x = self.circle_list[0]
-            y = self.circle_list[1]
+            x_prime = self.circle_list[0]
+            y_prime = self.circle_list[1]
             radius = self.circle_list[2]
-            color_image = cv2.circle(color_image, (x,y), radius, (0, 255, 255), 2)
-            position_data = Int32MultiArray(data=[x,y])
+            color_image = cv2.circle(
+                color_image, (x_prime, y_prime), radius, (0, 255, 255), 2)
+            position_data = Int32MultiArray(data=[x_prime, y_prime])
             self.position_pub.publish(position_data)
         cv2.imshow("RGB", color_image)
         cv2.waitKey(3)
@@ -137,7 +143,8 @@ class ballTracker:
 
     def depth_callback(self, image):
         try:
-            self.depth_image_raw = self.bridge.imgmsg_to_cv2(image, "passthrough")
+            self.depth_image_raw = self.bridge.imgmsg_to_cv2(
+                image, "passthrough")
         except CvBridgeError as e:
             print(e)
 
@@ -149,9 +156,10 @@ class ballTracker:
             x = self.circle_list[0]
             y = self.circle_list[1]
             distance = depth_array[y][x]
-            #distance = distance / 1000
+            # distance = distance / 1000
             self.distance_pub.publish(float(distance))
         return
+
 
 def main(args):
     rospy.init_node('ball_tracker', anonymous=True)
