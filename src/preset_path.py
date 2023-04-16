@@ -134,13 +134,13 @@ class SmartCart:
         self.csv_writer.writerow(data)
 
     def imuProcess(self, imuData):
+        yaw = euler_from_quaternion([imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, imuData.orientation.w])[2]
         data = [imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, 
                 imuData.angular_velocity.x, imuData.angular_velocity.y, imuData.angular_velocity.z, 
                 imuData.linear_acceleration.x, imuData.linear_acceleration.y, imuData.linear_acceleration.z]
         self.filtered_imu_writer.writerow(data)
     
     def rawImuProcess(self, imuData):
-        yaw = euler_from_quaternion([[imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, odomData.orientation.w]])
         data = [imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, 
                 imuData.angular_velocity.x, imuData.angular_velocity.y, imuData.angular_velocity.z, 
                 imuData.linear_acceleration.x, imuData.linear_acceleration.y, imuData.linear_acceleration.z, yaw]
