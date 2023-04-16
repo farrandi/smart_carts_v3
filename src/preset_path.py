@@ -94,7 +94,7 @@ class SmartCart:
         self.filtered_imu_writer = csv.writer(self.filtered_imu_file)
         self.csv_writer.writerow(["goal x", "goal y", "true x", "true y", "error", "dist travelled", "yaw"])
         self.raw_imu_writer.writerow(["x", "y", "z", "angular_vel x", "angular_vel y", "angular_vel z", "linear_accel x", "linear_accel y", "linear_accel z"])
-        self.filtered_imu_writer.writerow(["x", "y", "z", "angular_vel x", "angular_vel y", "angular_vel z", "linear_accel x", "linear_accel y", "linear_accel z"])
+        self.filtered_imu_writer.writerow(["x", "y", "z", "angular_vel x", "angular_vel y", "angular_vel z", "linear_accel x", "linear_accel y", "linear_accel z", "yaw"])
 
         print("SmartCart Initialized")
 
@@ -140,9 +140,10 @@ class SmartCart:
         self.filtered_imu_writer.writerow(data)
     
     def rawImuProcess(self, imuData):
+        yaw = euler_from_quaternion([[imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, odomData.orientation.w]])
         data = [imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, 
                 imuData.angular_velocity.x, imuData.angular_velocity.y, imuData.angular_velocity.z, 
-                imuData.linear_acceleration.x, imuData.linear_acceleration.y, imuData.linear_acceleration.z]
+                imuData.linear_acceleration.x, imuData.linear_acceleration.y, imuData.linear_acceleration.z, yaw]
         self.raw_imu_writer.writerow(data)
 
 
