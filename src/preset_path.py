@@ -79,8 +79,8 @@ class SmartCart:
         
         #subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
         # self.odom_sub = rospy.Subscriber('/viso2/odometry', Odometry, self.odomProcess) # use this for visual odometry
-        self.odom_sub = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)  # use this for sensor fusion
-        # self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)  # use this for wheel encoder odometry
+        # self.odom_sub = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)  # use this for sensor fusion
+        self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)  # use this for wheel encoder odometry
         self.imu_filter_sub = rospy.Subscriber('/imu_data', Imu, self.imuProcess)
         self.imu_raw_sub = rospy.Subscriber('camera/imu', Imu, self.rawImuProcess)
 
