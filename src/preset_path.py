@@ -78,23 +78,26 @@ class SmartCart:
         self.LED_rate = rospy.Rate(LED_PUBLISH_RATE)
         
         #subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
-        # self.odom_sub = rospy.Subscriber('/mono_odometer/odometry', Odometry, self.odomProcess)
-        self.odom_sub = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)
-        # self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)
+        # self.odom_sub = rospy.Subscriber('/viso2/odometry', Odometry, self.odomProcess) # use this for visual odometry
+        self.odom_sub = rospy.Subscriber('/robot_pose_ekf/odom_combined', PoseWithCovarianceStamped, self.odomProcess)  # use this for sensor fusion
+        # self.odom_sub = rospy.Subscriber('odom', Odometry, self.odomProcess)  # use this for wheel encoder odometry
         self.imu_filter_sub = rospy.Subscriber('/imu_data', Imu, self.imuProcess)
         self.imu_raw_sub = rospy.Subscriber('camera/imu', Imu, self.rawImuProcess)
 
         self.state = STATE_AT_GOAL #Set state so that Initially, we get next goal from user
 
+        # odometry data collection
         self.csv_file = open("/home/fizzer/catkin_ws/src/data/dist.csv", "w")
-        self.raw_imu_file = open("/home/fizzer/catkin_ws/src/data/raw_imu.csv", "w")
-        self.filtered_imu_file = open("/home/fizzer/catkin_ws/src/data/filtered_imu.csv", "w")
         self.csv_writer = csv.writer(self.csv_file)
-        self.raw_imu_writer = csv.writer(self.raw_imu_file)
-        self.filtered_imu_writer = csv.writer(self.filtered_imu_file)
         self.csv_writer.writerow(["goal x", "goal y", "true x", "true y", "error", "dist travelled", "yaw"])
-        self.raw_imu_writer.writerow(["x", "y", "z", "angular_vel x", "angular_vel y", "angular_vel z", "linear_accel x", "linear_accel y", "linear_accel z"])
-        self.filtered_imu_writer.writerow(["x", "y", "z", "angular_vel x", "angular_vel y", "angular_vel z", "linear_accel x", "linear_accel y", "linear_accel z", "yaw"])
+
+        # For IMU data collection
+        # self.raw_imu_file = open("/home/fizzer/catkin_ws/src/data/raw_imu.csv", "w")
+        # self.filtered_imu_file = open("/home/fizzer/catkin_ws/src/data/filtered_imu.csv", "w")
+        # self.raw_imu_writer = csv.writer(self.raw_imu_file)
+        # self.filtered_imu_writer = csv.writer(self.filtered_imu_file)
+        # self.raw_imu_writer.writerow(["x", "y", "z", "angular_vel x", "angular_vel y", "angular_vel z", "linear_accel x", "linear_accel y", "linear_accel z"])
+        # self.filtered_imu_writer.writerow(["x", "y", "z", "angular_vel x", "angular_vel y", "angular_vel z", "linear_accel x", "linear_accel y", "linear_accel z", "yaw"])
 
         print("SmartCart Initialized")
 
@@ -133,18 +136,19 @@ class SmartCart:
         # print("Saving CSV")
         self.csv_writer.writerow(data)
 
-    def imuProcess(self, imuData):
-        yaw = euler_from_quaternion([imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, imuData.orientation.w])[2]
-        data = [imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, 
-                imuData.angular_velocity.x, imuData.angular_velocity.y, imuData.angular_velocity.z, 
-                imuData.linear_acceleration.x, imuData.linear_acceleration.y, imuData.linear_acceleration.z]
-        self.filtered_imu_writer.writerow(data)
+    # only used for IMU data collection
+    # def imuProcess(self, imuData):
+    #     yaw = euler_from_quaternion([imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, imuData.orientation.w])[2]
+    #     data = [imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, 
+    #             imuData.angular_velocity.x, imuData.angular_velocity.y, imuData.angular_velocity.z, 
+    #             imuData.linear_acceleration.x, imuData.linear_acceleration.y, imuData.linear_acceleration.z]
+    #     self.filtered_imu_writer.writerow(data)
     
-    def rawImuProcess(self, imuData):
-        data = [imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, 
-                imuData.angular_velocity.x, imuData.angular_velocity.y, imuData.angular_velocity.z, 
-                imuData.linear_acceleration.x, imuData.linear_acceleration.y, imuData.linear_acceleration.z, yaw]
-        self.raw_imu_writer.writerow(data)
+    # def rawImuProcess(self, imuData):
+    #     data = [imuData.orientation.x, imuData.orientation.y, imuData.orientation.z, 
+    #             imuData.angular_velocity.x, imuData.angular_velocity.y, imuData.angular_velocity.z, 
+    #             imuData.linear_acceleration.x, imuData.linear_acceleration.y, imuData.linear_acceleration.z, yaw]
+    #     self.raw_imu_writer.writerow(data)
 
 
     def euclidean_distance(self):
