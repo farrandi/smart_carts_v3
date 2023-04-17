@@ -73,7 +73,7 @@ class SmartCart:
         self.LED_pub = rospy.Publisher('LEDsignal', Bool, queue_size = QUEUE_SIZE)
         self.LED_rate = rospy.Rate(LED_PUBLISH_RATE)
 
-        self.target_pose_pub = rospy.Publisher('target_pose', Pose, queue_size = QUEUE_SIZE)
+        self.target_pose_pub = rospy.Publisher('target_pose', PoseStamped, queue_size = QUEUE_SIZE)
 
         
         # subscriber that subscribes to the "Odom" topic and calls the function "odomProcess"
